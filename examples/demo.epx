@@ -1,0 +1,11 @@
+make square[n] {
+  give n * n;
+}
+
+assign nums as array = {2, 4, 6};
+
+repeat[x in 0 to 2, 1]{
+  assign result as int = call square[nums{x}]; $ yaha pe comment dal rhe hai bhaii..
+  store msg = `square of [nums{x}] is [result]`;
+  show msg;
+}
