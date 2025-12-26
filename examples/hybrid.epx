@@ -1,0 +1,26 @@
+show "Please enter a number and press enter, five times";
+assign numbers as array = {};
+repeat[x in 0 to 4, 1]{
+  show "Enter a number: ";
+  assign num_insert = :input;
+  method:array numbers.append[num_insert];
+}
+show "The numbers you entered are: " + numbers;
+
+
+
+
+$ make test[name]{
+$ all assign ok as string = :input;
+$ fix assign tes as int = 3.14159;
+$ store bubu = `[ok] and tes is [tes]`;
+$ give bubu;
+$ }
+$ repeat[i in numbers]{
+$   assign n as int = numbers{i};
+$   @js :~
+$     if(n % 2 == 0){
+$       console.log(n);
+$     }
+$   ~:
+$ }

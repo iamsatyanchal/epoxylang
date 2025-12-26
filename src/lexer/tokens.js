@@ -2,6 +2,8 @@ const TokenType = {
     // keywords
     ASSIGN: "ASSIGN",
     ALL: "ALL",
+    FIX: "FIX",
+    UPDATE: "UPDATE",
     STORE: "STORE",
     MAKE: "MAKE",
     CALL: "CALL",
@@ -16,6 +18,7 @@ const TokenType = {
     AND: "AND",
     AS: "AS",
     SHOW: "SHOW",
+    METHOD: "METHOD",
 
     // datatypes
     TYPE: "TYPE",
@@ -26,8 +29,12 @@ const TokenType = {
     BOOLEAN: "BOOLEAN",
     NULL: "NULL",
     UNDEFINED: "UNDEFINED",
+    INPUT: "INPUT",
 
     IDENTIFIER: "IDENTIFIER",
+
+    // raw javascript
+    JSBLOCK: "JSBLOCK",
 
     // operators
     EQUAL: "EQUAL",
@@ -35,20 +42,26 @@ const TokenType = {
     MINUS: "MINUS",
     STAR: "STAR",
     SLASH: "SLASH",
+    MODULO: "MODULO",
     GT: "GT",
     LT: "LT",
     GTE: "GTE",
     LTE: "LTE",
     EQEQ: "EQEQ",
     NOTEQ: "NOTEQ",
+    ARROW: "ARROW",
 
     // symbols
     LBRACE: "LBRACE",
     RBRACE: "RBRACE",
     LBRACKET: "LBRACKET",
     RBRACKET: "RBRACKET",
+    LPAREN: "LPAREN",
+    RPAREN: "RPAREN",
     SEMICOLON: "SEMICOLON",
     COMMA: "COMMA",
+    DOT: "DOT",
+    COLON: "COLON",
 
     EOF: "EOF"
 };
@@ -64,6 +77,8 @@ class Token {
 const KEYWORDS = {
     assign: TokenType.ASSIGN,
     all: TokenType.ALL,
+    fix: TokenType.FIX,
+    update: TokenType.UPDATE,
     store: TokenType.STORE,
     make: TokenType.MAKE,
     call: TokenType.CALL,
@@ -78,11 +93,13 @@ const KEYWORDS = {
     and: TokenType.AND,
     as: TokenType.AS,
     show: TokenType.SHOW,
+    method: TokenType.METHOD,
 };
 
 const TYPES = [
     "string",
     "int",
+    "double",
     "bool",
     "array",
     "null",
@@ -95,6 +112,7 @@ const OP_MAP = {
     MINUS: "-",
     STAR: "*",
     SLASH: "/",
+    MODULO: "%",
     GT: ">",
     LT: "<",
     GTE: ">=",

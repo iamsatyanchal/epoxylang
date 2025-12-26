@@ -24,7 +24,12 @@ class Lexer {
 
     readNumber() {
         let num = "";
-        while (this.current && /[0-9]/.test(this.current)) {
+        let hasDecimal = false;
+
+        while (this.current && (/[0-9]/.test(this.current) || (this.current === "." && !hasDecimal))) {
+            if (this.current === ".") {
+                hasDecimal = true;
+            }
             num += this.current;
             this.advance();
         }
@@ -82,6 +87,51 @@ class Lexer {
         });
     }
 
+    readJSBlock() {
+        // We're at '@', check if next chars are 'js~'
+        this.advance(); // skip '@'
+
+        // Read 'js'
+        if (this.current !== 'j') {
+            throw new Error("Expected 'js' after '@'");
+        }
+        this.advance();
+
+        if (this.current !== 's') {
+            throw new Error("Expected 'js' after '@'");
+        }
+        this.advance();
+
+        // Skip any whitespace before ~
+        this.skipWhitespace();
+        if (this.current !== ':') {
+            throw new Error("Expected ':' after '@js'");
+        }
+        this.advance();
+
+        if (this.current !== '~') {
+            throw new Error("Expected '~' after '@js'");
+        }
+        this.advance(); // skip opening '~'
+
+        // Capture everything until closing '~'
+        let code = "";
+
+        while (this.current && this.current !== '~' && this.peek !== ':') {
+            code += this.current;
+            this.advance();
+        }
+
+        if (this.current !== '~' && this.peek !== ':') {
+            throw new Error("Unterminated @js block - missing closing '~:'");
+        }
+
+        this.advance(); // skip closing '~'
+        this.advance(); // skip closing ':'
+
+        return new Token(TokenType.JSBLOCK, code);
+    }
+
     getNextToken() {
         while (this.current) {
             if (/\s/.test(this.current)) {
@@ -97,9 +147,31 @@ class Lexer {
                 continue;
             }
 
+            // @js blocks for raw JavaScript
+            if (this.current === "@") return this.readJSBlock();
+
             if (/[0-9]/.test(this.current)) return this.readNumber();
             if (/[a-zA-Z_]/.test(this.current)) return this.readWord();
             if (`'"\``.includes(this.current)) return this.readString();
+
+            // :input special syntax
+            if (this.current === ":" && this.peek() === "i") {
+                // Check if it's ":input"
+                const saved = this.pos;
+                this.advance(); // skip ':'
+                let word = "";
+                while (this.current && /[a-zA-Z_]/.test(this.current)) {
+                    word += this.current;
+                    this.advance();
+                }
+                if (word === "input") {
+                    return new Token(TokenType.INPUT);
+                }
+                // Not :input, restore position
+                this.pos = saved;
+                this.current = this.input[this.pos];
+                // If not :input, fall through to handle : as COLON token
+            }
 
             // double-char operators
             const twoChar = this.current + this.peek();
@@ -107,6 +179,7 @@ class Lexer {
             if (twoChar === "!=") { this.advance(); this.advance(); return new Token(TokenType.NOTEQ); }
             if (twoChar === ">=") { this.advance(); this.advance(); return new Token(TokenType.GTE); }
             if (twoChar === "<=") { this.advance(); this.advance(); return new Token(TokenType.LTE); }
+            if (twoChar === "->") { this.advance(); this.advance(); return new Token(TokenType.ARROW); }
 
             // single-char
             const single = {
@@ -115,14 +188,19 @@ class Lexer {
                 "-": TokenType.MINUS,
                 "*": TokenType.STAR,
                 "/": TokenType.SLASH,
+                "%": TokenType.MODULO,
                 ">": TokenType.GT,
                 "<": TokenType.LT,
                 "{": TokenType.LBRACE,
                 "}": TokenType.RBRACE,
                 "[": TokenType.LBRACKET,
                 "]": TokenType.RBRACKET,
+                "(": TokenType.LPAREN,
+                ")": TokenType.RPAREN,
                 ";": TokenType.SEMICOLON,
-                ",": TokenType.COMMA
+                ",": TokenType.COMMA,
+                ".": TokenType.DOT,
+                ":": TokenType.COLON
             };
 
             if (single[this.current]) {

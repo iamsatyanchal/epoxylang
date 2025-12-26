@@ -1,0 +1,48 @@
+$ Test array methods
+assign numbers as array = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+show "Original array:";
+show numbers;
+
+$ Test filter with lambda and modulo
+assign evens as array = method:array numbers.filter[call [x] -> x % 2 == 0];
+show "Even numbers (filter):";
+show evens;
+
+$ Test map with lambda
+assign doubled as array = method:array numbers.map[call [x] -> x * 2];
+show "Doubled numbers (map):";
+show doubled;
+
+$ Test slice - reverse array (note: slice takes string literal)
+assign reversed as array = method:array numbers.slice["::-1"];
+show "Reversed array:";
+show reversed;
+
+$ Test slice - every 2nd element
+assign everynd as array = method:array numbers.slice["::2"];
+show "Every 2nd element:";
+show everynd;
+
+$ Test slice - range
+assign range as array = method:array numbers.slice["2:5"];
+show "Elements 2-4:";
+show range;
+
+$ Test string methods
+assign message as string = :input;
+assign upper as string = method:string message.upper[];
+show "Uppercase:";
+show upper;
+
+assign lower as string = method:string message.lower[];
+show "Lowercase:";
+show lower;
+show method:string lower.size[];
+show method:string lower.replace["world", "epoxy"];
+
+$ Test modulo operator
+assign remainder as int = 17 % 5;
+assign okko as double = 3.14;
+show okko;
+show "17 % 5 =";
+show remainder;

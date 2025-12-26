@@ -17,9 +17,14 @@ class JSCodeGenerator {
                 return node.statements.map(s => this.visit(s)).join("\n");
             case "AssignStatement":
                 return this.visitAssignStatement(node);
+            case "UpdateStatement":
+                return this.visitUpdateStatement(node);
+            case "RawJSBlock":
+                return this.visitRawJSBlock(node);
             case "BinaryExpression": return this.visitBinaryExpression(node);
             case "Literal": return this.visitLiteral(node);
             case "Identifier": return this.visitIdentifier(node);
+            case "InputExpression": return this.visitInputExpression(node);
             case "StoreStatement": return this.visitStoreStatement(node);
             case "ShowStatement": return this.visitShowStatement(node);
             case "FunctionDeclaration": return this.visitFunctionDeclaration(node);
@@ -30,6 +35,8 @@ class JSCodeGenerator {
             case "RepeatUntil": return this.visitRepeatUntil(node);
             case "ArrayLiteral": return this.visitArrayLiteral(node);
             case "ArrayAccess": return this.visitArrayAccess(node);
+            case "MethodCall": return this.visitMethodCall(node);
+            case "LambdaExpression": return this.visitLambdaExpression(node);
             default:
                 throw new Error("Unknown AST node: " + node.type);
         }
@@ -37,9 +44,33 @@ class JSCodeGenerator {
 
 
     visitAssignStatement(node) {
-        const keyword = node.isGlobal ? "var" : "let";
+        // Determine the JavaScript keyword based on mutability flags
+        let keyword;
+        if (node.isFix) {
+            keyword = "const";
+        } else if (node.isGlobal) {
+            keyword = "var";
+        } else {
+            keyword = "let";
+        }
+
+        // Handle declaration without assignment
+        if (node.value === null) {
+            return `${keyword} ${node.name};`;
+        }
+
         const value = this.visit(node.value);
         return `${keyword} ${node.name} = ${value};`;
+    }
+
+    visitUpdateStatement(node) {
+        const value = this.visit(node.value);
+        return `${node.name} = ${value};`;
+    }
+
+    visitRawJSBlock(node) {
+        // Return the raw JavaScript code as-is
+        return node.code;
     }
 
     visitBinaryExpression(node) {
@@ -59,6 +90,10 @@ class JSCodeGenerator {
 
     visitIdentifier(node) {
         return node.name;
+    }
+
+    visitInputExpression(node) {
+        return "input_of_epoxy_lang_dont_use_this_name()";
     }
 
     convertInterpolation(text) {
@@ -111,8 +146,18 @@ class JSCodeGenerator {
 
 
     visitStoreStatement(node) {
+        // Determine the JavaScript keyword based on mutability flags
+        let keyword;
+        if (node.isFix) {
+            keyword = "const";
+        } else if (node.isGlobal) {
+            keyword = "var";
+        } else {
+            keyword = "let";
+        }
+
         const interpolated = this.convertInterpolation(node.value);
-        return `const ${node.name} = \`${interpolated}\`;`;
+        return `${keyword} ${node.name} = \`${interpolated}\`;`;
     }
 
     visitShowStatement(node) {
@@ -167,13 +212,25 @@ class JSCodeGenerator {
 
     visitRepeatFor(node) {
         const v = node.varName;
+        const body = node.body.map(s => this.visit(s)).join("\n");
+
+        // Handle array iteration: repeat[x in arrayName]
+        if (node.arrayName) {
+            return `
+for (let ${v} = 0; ${v} < ${node.arrayName}.length; ${v}++) {
+${body}
+}`.trim();
+        }
+
+        // Handle numeric range with bidirectional support
         const start = this.visit(node.start);
         const end = this.visit(node.end);
         const step = this.visit(node.step);
-        const body = node.body.map(s => this.visit(s)).join("\n");
 
+        // Generate bidirectional loop: compare start and end at runtime
+        // If start <= end: increment, else: decrement
         return `
-for (let ${v} = ${start}; ${v} <= ${end}; ${v} += ${step}) {
+for (let ${v} = ${start}; ${start} <= ${end} ? ${v} <= ${end} : ${v} >= ${end}; ${start} <= ${end} ? ${v} += ${step} : ${v} -= ${step}) {
 ${body}
 }`.trim();
     }
@@ -186,6 +243,140 @@ ${body}
 do {
 ${body}
 } while (!(${condition}));`.trim();
+    }
+
+    visitMethodCall(node) {
+        const target = node.target;
+        const methodName = node.methodName;
+        const args = node.args;
+
+        // Array methods
+        if (node.targetType === "array") {
+            switch (methodName) {
+                case "append":
+                    // .append[value] -> .push(value)
+                    if (args.length !== 1) {
+                        throw new Error("append requires exactly 1 argument");
+                    }
+                    return `${target}.push(${this.visit(args[0])})`;
+
+                case "pop":
+                    // .pop[] -> .pop()
+                    return `${target}.pop()`;
+
+                case "includes":
+                    // .includes[value] -> .includes(value)
+                    if (args.length !== 1) {
+                        throw new Error("includes requires exactly 1 argument");
+                    }
+                    return `${target}.includes(${this.visit(args[0])})`;
+
+                case "filter":
+                    // .filter[call [x] -> x % 2 == 0] -> .filter((x) => x % 2 === 0)
+                    if (args.length !== 1) {
+                        throw new Error("filter requires exactly 1 argument (lambda function)");
+                    }
+                    return `${target}.filter(${this.visit(args[0])})`;
+
+                case "map":
+                    // .map[call [x] -> x * 2] -> .map((x) => x * 2)
+                    if (args.length !== 1) {
+                        throw new Error("map requires exactly 1 argument (lambda function)");
+                    }
+                    return `${target}.map(${this.visit(args[0])})`;
+
+                case "join":
+                    // .join[separator] -> .join(separator) or .join() for default
+                    if (args.length === 0) {
+                        return `${target}.join()`;
+                    } else if (args.length === 1) {
+                        return `${target}.join(${this.visit(args[0])})`;
+                    } else {
+                        throw new Error("join requires 0 or 1 argument");
+                    }
+
+                case "slice":
+                    // .slice[pythonSlice] -> .slice(start, end)
+                    if (args.length !== 1) {
+                        throw new Error("slice requires exactly 1 argument (slice notation)");
+                    }
+                    return this.convertPythonSlice(target, args[0]);
+
+                default:
+                    throw new Error(`Unknown array method: ${methodName}`);
+            }
+        }
+
+        // String methods
+        if (node.targetType === "string") {
+            switch (methodName) {
+                case "upper":
+                    // .upper[] -> .toUpperCase()
+                    return `${target}.toUpperCase()`;
+
+                case "lower":
+                    // .lower[] -> .toLowerCase()
+                    return `${target}.toLowerCase()`;
+
+                case "size":
+                    // .size[] -> .length
+                    return `${target}.length`;
+
+                case "includes":
+                    // .includes[value] -> .includes(value)
+                    if (args.length !== 1) {
+                        throw new Error("includes requires exactly 1 argument");
+                    }
+                    return `${target}.includes(${this.visit(args[0])})`;
+
+                case "replace":
+                    // .replace["old" with "new"] -> .replace("old", "new")
+                    if (args.length !== 2) {
+                        throw new Error("replace requires exactly 2 arguments (old, new)");
+                    }
+                    return `${target}.replace(${this.visit(args[0])}, ${this.visit(args[1])})`;
+
+                default:
+                    throw new Error(`Unknown string method: ${methodName}`);
+            }
+        }
+
+        throw new Error(`Unknown target type: ${node.targetType}`);
+    }
+
+    visitLambdaExpression(node) {
+        // Convert lambda to arrow function: call [x] -> x % 2 == 0 => (x) => x % 2 === 0
+        const params = node.params.join(", ");
+        const body = this.visit(node.body);
+        return `(${params}) => ${body}`;
+    }
+
+    convertPythonSlice(target, sliceExpr) {
+        // Handle Python-style slicing: ::2, 2:5, ::-1
+        // This is a simplified version - you'd need to parse the slice notation
+        // For now, let's assume sliceExpr is a string literal
+
+        if (sliceExpr.type === "Literal" && typeof sliceExpr.value === "string") {
+            const slice = sliceExpr.value;
+
+            // Parse slice notation
+            if (slice === "::-1") {
+                // Reverse array
+                return `${target}.slice().reverse();`;
+            } else if (slice.startsWith("::")) {
+                // Every nth element
+                const step = parseInt(slice.substring(2));
+                return `${target}.filter((_, i) => i % ${step} === 0);`;
+            } else if (slice.includes(":")) {
+                // Range slice
+                const parts = slice.split(":");
+                const start = parts[0] || "0";
+                const end = parts[1] || `${target}.length`;
+                return `${target}.slice(${start}, ${end});`;
+            }
+        }
+
+        throw new Error("Invalid slice notation");
     }
 
 }

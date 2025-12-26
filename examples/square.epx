@@ -1,0 +1,13 @@
+make square[n] {
+  give n * n;
+}
+assign nums as array = {2, 4, 6};
+assign ok as string;
+repeat[x in nums]{
+  assign result as int = call square[nums{x}]; $ yaha pe comment dal rhe hai bhaii..
+  $ assign add as int = call [x,y] -> give x +y
+  store msg = `square of [nums{x}] is [result]`;
+  show msg;
+}
+update ok = :input;
+show ok;

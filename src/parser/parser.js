@@ -3,6 +3,7 @@ import {
     Program,
     AssignStatement,
     StoreStatement,
+    UpdateStatement,
     BinaryExpression,
     Identifier,
     Literal,
@@ -13,7 +14,11 @@ import {
     CallExpression,
     RepeatUntil,
     ShowStatement,
-    RepeatFor
+    RepeatFor,
+    RawJSBlock,
+    InputExpression,
+    MethodCall,
+    LambdaExpression
 } from "./ast.js";
 
 class Parser {
@@ -64,29 +69,50 @@ class Parser {
         return new Program(statements);
     }
 
+
     parseStatement() {
         const t = this.current().type;
 
-        if (t === TokenType.ALL || t === TokenType.ASSIGN) return this.parseAssign();
-        if (t === TokenType.STORE) return this.parseStore();
+        // Handle assign with optional all/fix prefix
+        if (t === TokenType.ALL || t === TokenType.FIX || t === TokenType.ASSIGN) {
+            // Check if it's assign (could be "assign", "all assign", or "fix assign")
+            if (t === TokenType.ASSIGN) return this.parseAssign();
+            if (this.peekType() === TokenType.ASSIGN) return this.parseAssign();
+        }
+
+        // Handle store with optional all/fix prefix
+        if (t === TokenType.ALL || t === TokenType.FIX || t === TokenType.STORE) {
+            // Check if it's store (could be "store", "all store", or "fix store")
+            if (t === TokenType.STORE) return this.parseStore();
+            if (this.peekType() === TokenType.STORE) return this.parseStore();
+        }
+
+        if (t === TokenType.UPDATE) return this.parseUpdate();
+        if (t === TokenType.JSBLOCK) return this.parseJSBlock();
         if (t === TokenType.CHECK) return this.parseCheck();
         if (t === TokenType.MAKE) return this.parseMake();
         if (t === TokenType.CALL) return this.parseCall();
         if (t === TokenType.GIVE) return this.parseGive();
         if (t === TokenType.REPEAT && this.peekType() === TokenType.LBRACKET) return this.parseRepeatFor();
         if (t === TokenType.REPEAT) return this.parseRepeatUntil();
-
-        if (t === TokenType.SHOW) return this.parseShow(); // 🔥 ADD THIS
+        if (t === TokenType.SHOW) return this.parseShow();
+        if (t === TokenType.METHOD) return this.parseMethodCall();
 
         throw new Error("Unknown statement: " + t);
     }
 
+
     parseAssign() {
         let isGlobal = false;
+        let isFix = false;
 
+        // Check for 'all' or 'fix' prefix
         if (this.current().type === TokenType.ALL) {
             isGlobal = true;
             this.eat(TokenType.ALL);
+        } else if (this.current().type === TokenType.FIX) {
+            isFix = true;
+            this.eat(TokenType.FIX);
         }
 
         this.eat(TokenType.ASSIGN);
@@ -101,9 +127,25 @@ class Parser {
             this.eat(TokenType.TYPE);
         }
 
-        this.eat(TokenType.EQUAL);
+        // Check if this is a declaration without assignment
+        if (this.current().type === TokenType.SEMICOLON) {
+            // Declaration only: assign name as type;
+            if (!dataType) {
+                throw new Error(
+                    "assign: datatype required when declaring variable without value"
+                );
+            }
+            this.eat(TokenType.SEMICOLON);
+            return new AssignStatement({
+                isGlobal,
+                isFix,
+                name,
+                dataType,
+                value: null
+            });
+        }
 
-        // 🔥 FIX IS HERE
+        this.eat(TokenType.EQUAL);
         const value = this.parseExpression();
 
         // enforce rule
@@ -116,11 +158,11 @@ class Parser {
             throw new Error("assign: array literal requires 'as array'");
         }
 
-
         this.eat(TokenType.SEMICOLON);
 
         return new AssignStatement({
             isGlobal,
+            isFix,
             name,
             dataType,
             value
@@ -128,6 +170,18 @@ class Parser {
     }
 
     parseStore() {
+        let isGlobal = false;
+        let isFix = false;
+
+        // Check for 'all' or 'fix' prefix
+        if (this.current().type === TokenType.ALL) {
+            isGlobal = true;
+            this.eat(TokenType.ALL);
+        } else if (this.current().type === TokenType.FIX) {
+            isFix = true;
+            this.eat(TokenType.FIX);
+        }
+
         this.eat(TokenType.STORE);
         const name = this.current().value;
         this.eat(TokenType.IDENTIFIER);
@@ -143,7 +197,24 @@ class Parser {
         this.eat(TokenType.STRING);
         this.eat(TokenType.SEMICOLON);
 
-        return new StoreStatement({ name, value: str.value });
+        return new StoreStatement({ isGlobal, isFix, name, value: str.value });
+    }
+
+    parseUpdate() {
+        this.eat(TokenType.UPDATE);
+        const name = this.current().value;
+        this.eat(TokenType.IDENTIFIER);
+        this.eat(TokenType.EQUAL);
+        const value = this.parseExpression();
+        this.eat(TokenType.SEMICOLON);
+
+        return new UpdateStatement({ name, value });
+    }
+
+    parseJSBlock() {
+        const code = this.current().value;
+        this.eat(TokenType.JSBLOCK);
+        return new RawJSBlock(code);
     }
 
     parseValue() {
@@ -167,6 +238,32 @@ class Parser {
     parsePrimary() {
         const tok = this.current();
 
+        // Handle unary minus for negative numbers
+        if (tok.type === TokenType.MINUS) {
+            this.eat(TokenType.MINUS);
+            const expr = this.parsePrimary();
+            // If it's a literal number, negate it directly
+            if (expr.type === "Literal" && typeof expr.value === "number") {
+                return new Literal(-expr.value);
+            }
+            // Otherwise create a binary expression: 0 - expr
+            return new BinaryExpression(new Literal(0), TokenType.MINUS, expr);
+        }
+
+        // Handle unary plus (just ignore it)
+        if (tok.type === TokenType.PLUS) {
+            this.eat(TokenType.PLUS);
+            return this.parsePrimary();
+        }
+
+        // Parentheses for precedence
+        if (tok.type === TokenType.LPAREN) {
+            this.eat(TokenType.LPAREN);
+            const expr = this.parseExpression();
+            this.eat(TokenType.RPAREN);
+            return expr;
+        }
+
         // literals
         if (
             tok.type === TokenType.NUMBER ||
@@ -179,10 +276,44 @@ class Parser {
             return new Literal(tok.value);
         }
 
-        // call expression
+        // :input special value
+        if (tok.type === TokenType.INPUT) {
+            this.pos++;
+            return new InputExpression();
+        }
+
+        // call expression or lambda
         if (tok.type === TokenType.CALL) {
             this.eat(TokenType.CALL);
 
+            // Check if this is a lambda: call [param] -> body
+            if (this.current().type === TokenType.LBRACKET) {
+                this.eat(TokenType.LBRACKET);
+
+                // Parse parameters
+                const params = [];
+                if (this.current().type !== TokenType.RBRACKET) {
+                    params.push(this.current().value);
+                    this.eat(TokenType.IDENTIFIER);
+
+                    while (this.current().type === TokenType.COMMA) {
+                        this.eat(TokenType.COMMA);
+                        params.push(this.current().value);
+                        this.eat(TokenType.IDENTIFIER);
+                    }
+                }
+
+                this.eat(TokenType.RBRACKET);
+
+                // Check for arrow
+                if (this.current().type === TokenType.ARROW) {
+                    this.eat(TokenType.ARROW);
+                    const body = this.parseExpression();
+                    return new LambdaExpression(params, body);
+                }
+            }
+
+            // Regular function call: call functionName[args]
             const name = this.current().value;
             this.eat(TokenType.IDENTIFIER);
 
@@ -237,6 +368,41 @@ class Parser {
             return node;
         }
 
+        // method call as expression
+        if (tok.type === TokenType.METHOD) {
+            this.eat(TokenType.METHOD);
+            this.eat(TokenType.COLON);
+
+            // Get the target type (array or string)
+            const targetType = this.current().value;
+            this.eat(TokenType.TYPE);
+
+            // Get the target variable
+            const target = this.current().value;
+            this.eat(TokenType.IDENTIFIER);
+
+            this.eat(TokenType.DOT);
+
+            // Get the method name
+            const methodName = this.current().value;
+            this.eat(TokenType.IDENTIFIER);
+
+            // Parse arguments in brackets
+            this.eat(TokenType.LBRACKET);
+            const args = [];
+
+            if (this.current().type !== TokenType.RBRACKET) {
+                args.push(this.parseExpression());
+                while (this.current().type === TokenType.COMMA) {
+                    this.eat(TokenType.COMMA);
+                    args.push(this.parseExpression());
+                }
+            }
+
+            this.eat(TokenType.RBRACKET);
+
+            return new MethodCall(targetType, target, methodName, args);
+        }
 
         throw new Error("Invalid primary expression: " + tok.type);
     }
@@ -246,7 +412,8 @@ class Parser {
 
         while (
             this.current().type === TokenType.STAR ||
-            this.current().type === TokenType.SLASH
+            this.current().type === TokenType.SLASH ||
+            this.current().type === TokenType.MODULO
         ) {
             const op = this.current().type;
             this.pos++;
@@ -449,23 +616,45 @@ class Parser {
         this.eat(TokenType.IDENTIFIER);
 
         this.eat(TokenType.IN);
-        const start = this.parseExpression();
-        this.eat(TokenType.TO);
-        const end = this.parseExpression();
 
-        this.eat(TokenType.COMMA);
-        const step = this.parseExpression();
+        // Check if this is array iteration: repeat[x in arrayName]
+        // or numeric range: repeat[i in 0 to 5, 1]
+        const firstToken = this.current();
 
-        this.eat(TokenType.RBRACKET);
-        this.eat(TokenType.LBRACE);
+        if (firstToken.type === TokenType.IDENTIFIER && this.peekType(1) === TokenType.RBRACKET) {
+            // Array iteration: repeat[x in arrayName]
+            const arrayName = firstToken.value;
+            this.eat(TokenType.IDENTIFIER);
+            this.eat(TokenType.RBRACKET);
+            this.eat(TokenType.LBRACE);
 
-        const body = [];
-        while (this.current().type !== TokenType.RBRACE) {
-            body.push(this.parseStatement());
+            const body = [];
+            while (this.current().type !== TokenType.RBRACE) {
+                body.push(this.parseStatement());
+            }
+            this.eat(TokenType.RBRACE);
+
+            return new RepeatFor(varName, null, null, null, body, arrayName);
+        } else {
+            // Numeric range: repeat[i in 0 to 5, 1]
+            const start = this.parseExpression();
+            this.eat(TokenType.TO);
+            const end = this.parseExpression();
+
+            this.eat(TokenType.COMMA);
+            const step = this.parseExpression();
+
+            this.eat(TokenType.RBRACKET);
+            this.eat(TokenType.LBRACE);
+
+            const body = [];
+            while (this.current().type !== TokenType.RBRACE) {
+                body.push(this.parseStatement());
+            }
+            this.eat(TokenType.RBRACE);
+
+            return new RepeatFor(varName, start, end, step, body);
         }
-        this.eat(TokenType.RBRACE);
-
-        return new RepeatFor(varName, start, end, step, body);
     }
 
     parseShow() {
@@ -477,6 +666,42 @@ class Parser {
         this.eat(TokenType.SEMICOLON);
 
         return new ShowStatement(value);
+    }
+
+    parseMethodCall() {
+        this.eat(TokenType.METHOD);
+        this.eat(TokenType.COLON);
+
+        // Get the target type (array or string)
+        const targetType = this.current().value;
+        this.eat(TokenType.TYPE);
+
+        // Get the target variable
+        const target = this.current().value;
+        this.eat(TokenType.IDENTIFIER);
+
+        this.eat(TokenType.DOT);
+
+        // Get the method name
+        const methodName = this.current().value;
+        this.eat(TokenType.IDENTIFIER);
+
+        // Parse arguments in brackets
+        this.eat(TokenType.LBRACKET);
+        const args = [];
+
+        if (this.current().type !== TokenType.RBRACKET) {
+            args.push(this.parseExpression());
+            while (this.current().type === TokenType.COMMA) {
+                this.eat(TokenType.COMMA);
+                args.push(this.parseExpression());
+            }
+        }
+
+        this.eat(TokenType.RBRACKET);
+        this.eat(TokenType.SEMICOLON);
+
+        return new MethodCall(targetType, target, methodName, args);
     }
 
 }

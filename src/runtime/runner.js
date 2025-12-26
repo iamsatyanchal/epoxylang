@@ -1,7 +1,10 @@
 import { Lexer } from "../lexer/lexer.js";
 import { TokenType } from "../lexer/tokens.js";
 import { Parser } from "../parser/parser.js";
-import { JSCodeGenerator } from "../generator/jsGenerator.js";
+import { JSCodeGenerator } from "../generator/jsgenerator.js";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
 
 function tokenizeAll(code) {
     const lexer = new Lexer(code);
@@ -10,7 +13,6 @@ function tokenizeAll(code) {
     do {
         t = lexer.getNextToken();
         tokens.push(t);
-        //console.log(t);
     } while (t.type !== TokenType.EOF);
     return tokens;
 }
@@ -23,7 +25,18 @@ function compile(code) {
 
 function run(code) {
     const js = compile(code);
-    return eval(js);
+
+    const finalcode_input = `
+const promptSync_of_epoxy_lang_dont_use_this_name = require("prompt-sync");
+const input_of_epoxy_lang_dont_use_this_name = promptSync_of_epoxy_lang_dont_use_this_name();
+${js}
+`;
+
+    const thisisthecode = js.includes("input_of_epoxy_lang_dont_use_this_name()")
+        ? finalcode_input
+        : js;
+
+    return eval(thisisthecode);
 }
 
 export { tokenizeAll, compile, run };

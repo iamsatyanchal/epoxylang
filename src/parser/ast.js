@@ -6,9 +6,10 @@ class Program {
 }
 
 class AssignStatement {
-    constructor({ isGlobal, name, dataType, value }) {
+    constructor({ isGlobal, isFix, name, dataType, value }) {
         this.type = "AssignStatement";
-        this.isGlobal = isGlobal;
+        this.isGlobal = isGlobal; // all -> var
+        this.isFix = isFix; // fix -> const
         this.name = name;
         this.dataType = dataType; //null allowed
         this.value = value;
@@ -16,8 +17,18 @@ class AssignStatement {
 }
 
 class StoreStatement {
-    constructor({ name, value }) {
+    constructor({ isGlobal, isFix, name, value }) {
         this.type = "StoreStatement";
+        this.isGlobal = isGlobal; // all -> var
+        this.isFix = isFix; // fix -> const
+        this.name = name;
+        this.value = value;
+    }
+}
+
+class UpdateStatement {
+    constructor({ name, value }) {
+        this.type = "UpdateStatement";
         this.name = name;
         this.value = value;
     }
@@ -110,13 +121,45 @@ class ShowStatement {
 }
 
 class RepeatFor {
-    constructor(varName, start, end, step, body) {
+    constructor(varName, start, end, step, body, arrayName = null) {
         this.type = "RepeatFor";
         this.varName = varName;
         this.start = start;
         this.end = end;
         this.step = step;
         this.body = body;
+        this.arrayName = arrayName; // For array iteration: repeat[x in arrayName]
+    }
+}
+
+class RawJSBlock {
+    constructor(code) {
+        this.type = "RawJSBlock";
+        this.code = code;
+    }
+}
+
+class InputExpression {
+    constructor() {
+        this.type = "InputExpression";
+    }
+}
+
+class MethodCall {
+    constructor(targetType, target, methodName, args) {
+        this.type = "MethodCall";
+        this.targetType = targetType; // "array" or "string"
+        this.target = target; // variable name (Identifier or expression)
+        this.methodName = methodName; // method name like "append", "upper"
+        this.args = args; // array of argument expressions
+    }
+}
+
+class LambdaExpression {
+    constructor(params, body) {
+        this.type = "LambdaExpression";
+        this.params = params; // array of parameter names
+        this.body = body; // expression
     }
 }
 
@@ -124,6 +167,7 @@ export {
     Program,
     AssignStatement,
     StoreStatement,
+    UpdateStatement,
     BinaryExpression,
     Identifier,
     Literal,
@@ -135,5 +179,9 @@ export {
     CallExpression,
     RepeatUntil,
     ShowStatement,
-    RepeatFor
+    RepeatFor,
+    RawJSBlock,
+    InputExpression,
+    MethodCall,
+    LambdaExpression
 };
