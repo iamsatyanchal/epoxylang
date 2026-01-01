@@ -173,6 +173,13 @@ class Lexer {
                 // If not :input, fall through to handle : as COLON token
             }
 
+            // three-char operators (check BEFORE two-char!)
+            const peek1 = this.peek();
+            const peek2 = this.pos + 2 < this.input.length ? this.input[this.pos + 2] : null;
+            const threeChar = this.current + peek1 + peek2;
+            if (threeChar === "===") { this.advance(); this.advance(); this.advance(); return new Token(TokenType.EQEQEQ); }
+            if (threeChar === "!==") { this.advance(); this.advance(); this.advance(); return new Token(TokenType.NOTEQEQ); }
+
             // double-char operators
             const twoChar = this.current + this.peek();
             if (twoChar === "==") { this.advance(); this.advance(); return new Token(TokenType.EQEQ); }

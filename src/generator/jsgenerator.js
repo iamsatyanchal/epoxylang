@@ -27,6 +27,9 @@ class JSCodeGenerator {
             case "InputExpression": return this.visitInputExpression(node);
             case "StoreStatement": return this.visitStoreStatement(node);
             case "ShowStatement": return this.visitShowStatement(node);
+            case "ErrorStatement": return this.visitErrorStatement(node);
+            case "SkipStatement": return this.visitSkipStatement(node);
+            case "HaltStatement": return this.visitHaltStatement(node);
             case "FunctionDeclaration": return this.visitFunctionDeclaration(node);
             case "ReturnStatement": return this.visitReturnStatement(node);
             case "CallExpression": return this.visitCallExpression(node);
@@ -118,7 +121,7 @@ class JSCodeGenerator {
                     throw new Error("Unmatched [ in store interpolation");
                 }
 
-                // 🔥 parse boxed expression safely
+                // parse boxed expression safely
                 const jsExpr = this.convertInlineExpression(expr.trim());
                 result += "${" + jsExpr + "}";
 
@@ -161,17 +164,50 @@ class JSCodeGenerator {
     }
 
     visitShowStatement(node) {
+        // Check if the value is a backtick string literal that needs interpolation
+        if (node.value.type === "Literal" && typeof node.value.value === "string") {
+            // We need to check the original token to see if it was a backtick string
+            // Since we don't have access to the token here, we'll handle it differently
+            // by creating a template literal if the string contains []
+            const str = node.value.value;
+            if (str.includes("[") && str.includes("]")) {
+                // This might be an interpolated string, convert it
+                const interpolated = this.convertInterpolation(str);
+                return `console.log(\`${interpolated}\`);`;
+            }
+        }
         return `console.log(${this.visit(node.value)});`;
+    }
+
+    visitErrorStatement(node) {
+        // Check if the value is a backtick string literal that needs interpolation
+        if (node.value.type === "Literal" && typeof node.value.value === "string") {
+            const str = node.value.value;
+            if (str.includes("[") && str.includes("]")) {
+                // This might be an interpolated string, convert it
+                const interpolated = this.convertInterpolation(str);
+                return `console.error("\x1b[31m" + \`${interpolated}\` + "\x1b[0m");`;
+            }
+        }
+        return `console.error("\x1b[31m" + ${this.visit(node.value)} + "\x1b[0m");`;
+    }
+
+    visitSkipStatement(node) {
+        return "continue;";
+    }
+
+    visitHaltStatement(node) {
+        return "break;";
     }
 
     visitFunctionDeclaration(node) {
         const params = node.params.join(", ");
         const body = node.body.map(s => this.visit(s)).join("\n");
-        return `function ${node.name}(${params}) {\n${body}\n}`;
+        return `function ${node.name} (${params}) { \n${body} \n } `;
     }
 
     visitReturnStatement(node) {
-        return `return ${this.visit(node.value)};`;
+        return `return ${this.visit(node.value)}; `;
     }
 
     visitArrayLiteral(node) {
@@ -182,27 +218,30 @@ class JSCodeGenerator {
     visitArrayAccess(node) {
         const arr = this.visit(node.array);
         const idx = this.visit(node.index);
-        return `${arr}[${idx}]`;
+        return `${arr} [${idx}]`;
     }
 
     visitCallExpression(node) {
         const args = node.args.map(a => this.visit(a)).join(", ");
-        return `${node.name}(${args})`;
+        return `${node.name} (${args})`;
     }
 
     visitIfChain(node) {
-        let code = `if (${this.visit(node.condition)}) {\n`;
+        let code = `if (${this.visit(node.condition)}) {
+\n`;
         code += node.body.map(s => this.visit(s)).join("\n");
         code += "\n}";
 
         for (const oc of node.orChecks) {
-            code += ` else if (${this.visit(oc.condition)}) {\n`;
+            code += ` else if (${this.visit(oc.condition)}) {
+    \n`;
             code += oc.body.map(s => this.visit(s)).join("\n");
             code += "\n}";
         }
 
         if (node.altBody) {
-            code += ` else {\n`;
+            code += ` else {
+        \n`;
             code += node.altBody.map(s => this.visit(s)).join("\n");
             code += "\n}";
         }
@@ -217,9 +256,9 @@ class JSCodeGenerator {
         // Handle array iteration: repeat[x in arrayName]
         if (node.arrayName) {
             return `
-for (let ${v} = 0; ${v} < ${node.arrayName}.length; ${v}++) {
+            for (let ${v} = 0; ${v} < ${node.arrayName}.length; ${v} ++) {
 ${body}
-}`.trim();
+            } `.trim();
         }
 
         // Handle numeric range with bidirectional support
@@ -230,9 +269,9 @@ ${body}
         // Generate bidirectional loop: compare start and end at runtime
         // If start <= end: increment, else: decrement
         return `
-for (let ${v} = ${start}; ${start} <= ${end} ? ${v} <= ${end} : ${v} >= ${end}; ${start} <= ${end} ? ${v} += ${step} : ${v} -= ${step}) {
+            for (let ${v} = ${start}; ${start} <= ${end} ? ${v} <= ${end} : ${v} >= ${end}; ${start} <= ${end} ? ${v} += ${step} : ${v} -= ${step}) {
 ${body}
-}`.trim();
+            } `.trim();
     }
 
     visitRepeatUntil(node) {
@@ -240,9 +279,9 @@ ${body}
         const body = node.body.map(s => this.visit(s)).join("\n");
 
         return `
-do {
+            do {
 ${body}
-} while (!(${condition}));`.trim();
+            } while (!(${condition})); `.trim();
     }
 
     visitMethodCall(node) {
@@ -303,7 +342,7 @@ ${body}
                     return this.convertPythonSlice(target, args[0]);
 
                 default:
-                    throw new Error(`Unknown array method: ${methodName}`);
+                    throw new Error(`Unknown array method: ${methodName} `);
             }
         }
 
@@ -337,18 +376,18 @@ ${body}
                     return `${target}.replace(${this.visit(args[0])}, ${this.visit(args[1])})`;
 
                 default:
-                    throw new Error(`Unknown string method: ${methodName}`);
+                    throw new Error(`Unknown string method: ${methodName} `);
             }
         }
 
-        throw new Error(`Unknown target type: ${node.targetType}`);
+        throw new Error(`Unknown target type: ${node.targetType} `);
     }
 
     visitLambdaExpression(node) {
         // Convert lambda to arrow function: call [x] -> x % 2 == 0 => (x) => x % 2 === 0
         const params = node.params.join(", ");
         const body = this.visit(node.body);
-        return `(${params}) => ${body}`;
+        return `(${params}) => ${body} `;
     }
 
     convertPythonSlice(target, sliceExpr) {
@@ -362,17 +401,17 @@ ${body}
             // Parse slice notation
             if (slice === "::-1") {
                 // Reverse array
-                return `${target}.slice().reverse();`;
+                return `${target}.slice().reverse(); `;
             } else if (slice.startsWith("::")) {
                 // Every nth element
                 const step = parseInt(slice.substring(2));
-                return `${target}.filter((_, i) => i % ${step} === 0);`;
+                return `${target}.filter((_, i) => i % ${step} === 0); `;
             } else if (slice.includes(":")) {
                 // Range slice
                 const parts = slice.split(":");
                 const start = parts[0] || "0";
                 const end = parts[1] || `${target}.length`;
-                return `${target}.slice(${start}, ${end});`;
+                return `${target}.slice(${start}, ${end}); `;
             }
         }
 

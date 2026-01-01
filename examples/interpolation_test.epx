@@ -1,0 +1,22 @@
+$ Test string interpolation in show and error
+
+assign tries = 78;
+
+$ Test 1: store with interpolation (already working)
+store finalmsg = `you guessed it right in [tries]`;
+show finalmsg;
+
+$ Test 2: show with backtick interpolation (should now work)
+show `you guessed it right in [tries]`;
+
+$ Test 3: error with backtick interpolation
+error `error occurred at try [tries]`;
+
+$ Test 4: snafu with backtick interpolation
+snafu `snafu at try number [tries]`;
+
+$ Test 5: Complex expression in interpolation
+assign x = 10;
+assign y = 20;
+show `sum of x and y is [x + y]`;
+error `product is [x * y]`;

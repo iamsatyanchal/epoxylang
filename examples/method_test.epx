@@ -46,3 +46,4 @@ assign okko as double = 3.14;
 show okko;
 show "17 % 5 =";
 show remainder;
+error "what the heck are you doing..?";

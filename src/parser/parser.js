@@ -14,6 +14,9 @@ import {
     CallExpression,
     RepeatUntil,
     ShowStatement,
+    ErrorStatement,
+    SkipStatement,
+    HaltStatement,
     RepeatFor,
     RawJSBlock,
     InputExpression,
@@ -96,6 +99,9 @@ class Parser {
         if (t === TokenType.REPEAT && this.peekType() === TokenType.LBRACKET) return this.parseRepeatFor();
         if (t === TokenType.REPEAT) return this.parseRepeatUntil();
         if (t === TokenType.SHOW) return this.parseShow();
+        if (t === TokenType.ERROR || t === TokenType.SNAFU) return this.parseError();
+        if (t === TokenType.SKIP) return this.parseSkip();
+        if (t === TokenType.HALT) return this.parseHalt();
         if (t === TokenType.METHOD) return this.parseMethodCall();
 
         throw new Error("Unknown statement: " + t);
@@ -447,7 +453,8 @@ class Parser {
             [
                 TokenType.GT, TokenType.LT,
                 TokenType.GTE, TokenType.LTE,
-                TokenType.EQEQ, TokenType.NOTEQ
+                TokenType.EQEQ, TokenType.NOTEQ,
+                TokenType.EQEQEQ, TokenType.NOTEQEQ
             ].includes(this.current().type)
         ) {
             const op = this.current().type;
@@ -666,6 +673,34 @@ class Parser {
         this.eat(TokenType.SEMICOLON);
 
         return new ShowStatement(value);
+    }
+
+    parseError() {
+        // Handle both 'error' and 'snafu' keywords
+        if (this.current().type === TokenType.ERROR) {
+            this.eat(TokenType.ERROR);
+        } else {
+            this.eat(TokenType.SNAFU);
+        }
+
+        // allow full expressions
+        const value = this.parseExpression();
+
+        this.eat(TokenType.SEMICOLON);
+
+        return new ErrorStatement(value);
+    }
+
+    parseSkip() {
+        this.eat(TokenType.SKIP);
+        this.eat(TokenType.SEMICOLON);
+        return new SkipStatement();
+    }
+
+    parseHalt() {
+        this.eat(TokenType.HALT);
+        this.eat(TokenType.SEMICOLON);
+        return new HaltStatement();
     }
 
     parseMethodCall() {

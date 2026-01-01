@@ -18,6 +18,10 @@ const TokenType = {
     AND: "AND",
     AS: "AS",
     SHOW: "SHOW",
+    ERROR: "ERROR",
+    SNAFU: "SNAFU",
+    SKIP: "SKIP",
+    HALT: "HALT",
     METHOD: "METHOD",
 
     // datatypes
@@ -48,7 +52,9 @@ const TokenType = {
     GTE: "GTE",
     LTE: "LTE",
     EQEQ: "EQEQ",
+    EQEQEQ: "EQEQEQ",
     NOTEQ: "NOTEQ",
+    NOTEQEQ: "NOTEQEQ",
     ARROW: "ARROW",
 
     // symbols
@@ -93,6 +99,10 @@ const KEYWORDS = {
     and: TokenType.AND,
     as: TokenType.AS,
     show: TokenType.SHOW,
+    error: TokenType.ERROR,
+    snafu: TokenType.SNAFU,
+    skip: TokenType.SKIP,
+    halt: TokenType.HALT,
     method: TokenType.METHOD,
 };
 
@@ -117,8 +127,10 @@ const OP_MAP = {
     LT: "<",
     GTE: ">=",
     LTE: "<=",
-    EQEQ: "===",
-    NOTEQ: "!==",
+    EQEQ: "==",
+    EQEQEQ: "===",
+    NOTEQ: "!=",
+    NOTEQEQ: "!==",
     AND: "&&",
     OR: "||"
 };

@@ -1,0 +1,16 @@
+assign attempts = 0;
+assign maxAttempts = 3;
+repeat until[attempts == maxAttempts]{
+    assign password = :input;
+    check[password == "secret123"]{
+        show "Access granted!";
+        halt;
+    }
+    alt {
+        update attempts = attempts + 1;
+        snafu "Incorrect password. Try again.";
+    }
+}
+check[attempts == maxAttempts]{
+    error "Too many failed attempts!";
+}

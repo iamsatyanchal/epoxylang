@@ -1,0 +1,28 @@
+{
+  "name": "epoxy-language",
+  "displayName": "Epoxy Language",
+  "description": "Syntax highlighting for the Epoxy programming language",
+  "version": "0.1.0",
+  "publisher": "iamsatyanchal",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "epoxy",
+        "aliases": ["Epoxy", "epx"],
+        "extensions": [".epx"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "epoxy",
+        "scopeName": "source.epoxy",
+        "path": "./syntaxes/epoxy.tmLanguage.json"
+      }
+    ]
+  }
+}

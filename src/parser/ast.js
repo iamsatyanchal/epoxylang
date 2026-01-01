@@ -120,6 +120,25 @@ class ShowStatement {
     }
 }
 
+class ErrorStatement {
+    constructor(value) {
+        this.type = "ErrorStatement";
+        this.value = value;
+    }
+}
+
+class SkipStatement {
+    constructor() {
+        this.type = "SkipStatement";
+    }
+}
+
+class HaltStatement {
+    constructor() {
+        this.type = "HaltStatement";
+    }
+}
+
 class RepeatFor {
     constructor(varName, start, end, step, body, arrayName = null) {
         this.type = "RepeatFor";
@@ -179,6 +198,9 @@ export {
     CallExpression,
     RepeatUntil,
     ShowStatement,
+    ErrorStatement,
+    SkipStatement,
+    HaltStatement,
     RepeatFor,
     RawJSBlock,
     InputExpression,
