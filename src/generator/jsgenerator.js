@@ -334,6 +334,34 @@ ${body}
                         throw new Error("join requires 0 or 1 argument");
                     }
 
+                case "size":
+                    // .size[] -> .length
+                    return `${target}.length`;
+
+                case "merge":
+                    // .merge[array2, array3, ...] -> .concat(array2, array3, ...)
+                    if (args.length === 0) {
+                        throw new Error("merge requires at least 1 argument");
+                    }
+                    const mergeArgs = args.map(a => this.visit(a)).join(", ");
+                    return `${target}.concat(${mergeArgs})`;
+
+                case "sort":
+                    // .sort[] -> .sort((a, b) => a - b) [numeric sort]
+                    return `${target}.sort((a, b) => a - b)`;
+
+                case "max":
+                    // .max[]
+                    return `Math.max.apply(null, ${target})`;
+
+                case "min":
+                    // .max[]
+                    return `Math.min.apply(null, ${target})`;
+
+                case "alphasort":
+                    // .alphasort[] -> .sort() [lexicographic/alphabetical sort]
+                    return `${target}.sort()`;
+
                 case "slice":
                     // .slice[pythonSlice] -> .slice(start, end)
                     if (args.length !== 1) {
@@ -401,17 +429,17 @@ ${body}
             // Parse slice notation
             if (slice === "::-1") {
                 // Reverse array
-                return `${target}.slice().reverse(); `;
+                return `${target}.slice().reverse() `;
             } else if (slice.startsWith("::")) {
                 // Every nth element
                 const step = parseInt(slice.substring(2));
-                return `${target}.filter((_, i) => i % ${step} === 0); `;
+                return `${target}.filter((_, i) => i % ${step} === 0) `;
             } else if (slice.includes(":")) {
                 // Range slice
                 const parts = slice.split(":");
                 const start = parts[0] || "0";
                 const end = parts[1] || `${target}.length`;
-                return `${target}.slice(${start}, ${end}); `;
+                return `${target}.slice(${start}, ${end}) `;
             }
         }
 

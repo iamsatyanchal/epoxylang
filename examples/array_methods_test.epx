@@ -1,0 +1,39 @@
+$ Test new array methods
+
+$ Test size method
+assign numbers as array = {1, 2, 3, 4, 5};
+show "Array:";
+show numbers;
+show "Array size:";
+show method:array numbers.size[];
+
+$ Test merge method
+assign array_one as array = {1, 2, 3};
+assign array_two as array = {4, 5, 6};
+assign array_three as array = {7, 8, 9};
+show "Array 1:";
+show array_one;
+show "Array 2:";
+show array_two;
+show "Array 3:";
+show array_three;
+show "Merged array:";
+show method:array array_one.merge[array_two, array_three];
+
+$ Test numeric sort
+assign unsorted as array = {5, 2, 8, 1, 9, 3};
+show "Unsorted array:";
+show unsorted;
+show "Numeric sorted:";
+show method:array unsorted.sort[];
+show "largest";
+show method:array unsorted.max[];
+show "lowest";
+show method:array unsorted.min[];
+
+$ Test alphabetical sort
+assign words as array = {"zebra", "apple", "mango", "banana"};
+show "Unsorted words:";
+show words;
+show "Alphabetically sorted:";
+show method:array words.alphasort[];

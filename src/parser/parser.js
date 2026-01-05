@@ -288,36 +288,65 @@ class Parser {
             return new InputExpression();
         }
 
-        // call expression or lambda
-        if (tok.type === TokenType.CALL) {
-            this.eat(TokenType.CALL);
+        // Lambda expression: [x] -> expr or [x, y] -> expr
+        if (tok.type === TokenType.LBRACKET) {
+            // Peek ahead to check if this is a lambda or array literal
+            // Lambda: [identifier] -> or [identifier, identifier] ->
+            // Array: [expression, ...] or empty []
 
-            // Check if this is a lambda: call [param] -> body
-            if (this.current().type === TokenType.LBRACKET) {
-                this.eat(TokenType.LBRACKET);
+            const savedPos = this.pos;
+            this.eat(TokenType.LBRACKET);
 
-                // Parse parameters
+            // Check if it's a lambda by looking for pattern: identifier(s) followed by ] ->
+            let isLambda = false;
+            if (this.current().type === TokenType.IDENTIFIER) {
+                const tempPos = this.pos;
+                this.eat(TokenType.IDENTIFIER);
+
+                // Check for comma (multiple params) or closing bracket
+                while (this.current().type === TokenType.COMMA) {
+                    this.eat(TokenType.COMMA);
+                    if (this.current().type !== TokenType.IDENTIFIER) {
+                        break;
+                    }
+                    this.eat(TokenType.IDENTIFIER);
+                }
+
+                // If we have ] followed by ->, it's a lambda
+                if (this.current().type === TokenType.RBRACKET && this.peekType() === TokenType.ARROW) {
+                    isLambda = true;
+                }
+
+                // Restore position to after the opening bracket
+                this.pos = tempPos;
+            }
+
+            if (isLambda) {
+                // Parse lambda: [params] -> body
                 const params = [];
-                if (this.current().type !== TokenType.RBRACKET) {
+                params.push(this.current().value);
+                this.eat(TokenType.IDENTIFIER);
+
+                while (this.current().type === TokenType.COMMA) {
+                    this.eat(TokenType.COMMA);
                     params.push(this.current().value);
                     this.eat(TokenType.IDENTIFIER);
-
-                    while (this.current().type === TokenType.COMMA) {
-                        this.eat(TokenType.COMMA);
-                        params.push(this.current().value);
-                        this.eat(TokenType.IDENTIFIER);
-                    }
                 }
 
                 this.eat(TokenType.RBRACKET);
-
-                // Check for arrow
-                if (this.current().type === TokenType.ARROW) {
-                    this.eat(TokenType.ARROW);
-                    const body = this.parseExpression();
-                    return new LambdaExpression(params, body);
-                }
+                this.eat(TokenType.ARROW);
+                const body = this.parseExpression();
+                return new LambdaExpression(params, body);
+            } else {
+                // Restore position and parse as array literal
+                this.pos = savedPos;
+                // Fall through to array literal parsing below
             }
+        }
+
+        // call expression
+        if (tok.type === TokenType.CALL) {
+            this.eat(TokenType.CALL);
 
             // Regular function call: call functionName[args]
             const name = this.current().value;
@@ -358,8 +387,17 @@ class Parser {
         }
 
 
-        // identifier
+        // identifier or lambda expression (x -> expr)
         if (tok.type === TokenType.IDENTIFIER) {
+            // Check if this is a lambda: identifier -> expression
+            if (this.peekType() === TokenType.ARROW) {
+                const param = tok.value;
+                this.eat(TokenType.IDENTIFIER);
+                this.eat(TokenType.ARROW);
+                const body = this.parseExpression();
+                return new LambdaExpression([param], body);
+            }
+
             this.pos++;
             let node = new Identifier(tok.value);
 
