@@ -1,0 +1,155 @@
+pre code.hljs {
+    display: block;
+    overflow-x: auto;
+    padding: 1em
+}
+
+code.hljs {
+    padding: 3px 5px
+}
+
+.hljs {
+    color: #2c3e50;
+    background: #fafafa
+}
+
+/* Comments - Gray */
+.hljs-comment,
+.hljs-quote {
+    color: #95a5a6;
+    font-style: italic
+}
+
+/* Keywords (assign, check, repeat, show, etc.) - Purple */
+.hljs-keyword {
+    color: #9b59b6;
+    font-weight: 600
+}
+
+/* Types (string, int, double, array, etc.) - Blue */
+.hljs-type {
+    color: #3498db;
+    font-weight: 600
+}
+
+/* Strings - Green */
+.hljs-string,
+.hljs-regexp {
+    color: #27ae60
+}
+
+/* String interpolation/substitution - Darker Green */
+.hljs-subst {
+    color: #16a085
+}
+
+/* Numbers - Orange */
+.hljs-number {
+    color: #e67e22
+}
+
+/* Literals (true, false, null, undefined) - Teal */
+.hljs-literal {
+    color: #1abc9c;
+    font-weight: 600
+}
+
+/* Operators (==, !=, +, -, *, /, ->, etc.) - Red */
+.hljs-operator {
+    color: #e74c3c;
+    font-weight: 600
+}
+
+/* Built-in functions (:input, methods like .filter, .map, etc.) - Dark Teal */
+.hljs-built_in {
+    color: #16a085;
+    font-weight: 600
+}
+
+/* Function/Method names - Pink/Magenta */
+.hljs-title.function,
+.hljs-function {
+    color: #e91e63;
+    font-weight: 600
+}
+
+/* Variables - Dark Gray */
+.hljs-variable {
+    color: #34495e
+}
+
+/* Properties - Brown */
+.hljs-property,
+.hljs-attr {
+    color: #8e44ad
+}
+
+/* Meta (for @js blocks) - Dark Purple with background */
+.hljs-meta {
+    color: #996e1dd5;
+    /* background: #ffc862; */
+    font-weight: 600;
+    /* text-shadow: 0px 0px 7px #ffa600; H-offset V-offset Blur Color */
+    box-shadow: 1px 1px 1px #ffa600;
+
+}
+
+/* Parameters - Blue Gray */
+.hljs-params {
+    color: #546e7a
+}
+
+/* Doctag - Purple */
+.hljs-doctag {
+    color: #9b59b6
+}
+
+/* Section, Name, Selector - Indigo */
+.hljs-section,
+.hljs-name,
+.hljs-selector-tag {
+    color: #5e35b1
+}
+
+/* Title, Symbol - Royal Blue */
+.hljs-title,
+.hljs-symbol,
+.hljs-bullet {
+    color: #2196f3;
+    font-weight: 600
+}
+
+/* Class titles - Orange */
+.hljs-class .hljs-title,
+.hljs-title.class_ {
+    color: #ff9800;
+    font-weight: 600
+}
+
+/* Links - Blue with underline */
+.hljs-link {
+    color: #2196f3;
+    text-decoration: underline
+}
+
+/* Emphasis */
+.hljs-emphasis {
+    font-style: italic
+}
+
+/* Strong */
+.hljs-strong {
+    font-weight: 700
+}
+
+/* Addition - Green background */
+.hljs-addition {
+    color: #27ae60;
+    background: #e8f5e9
+}
+
+/* Deletion - Red background */
+.hljs-deletion {
+    color: #e74c3c;
+    background: #ffebee
+}
