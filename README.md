@@ -60,7 +60,7 @@ epoxy hello.epx
 
 ## Documentation
 
-Comprehensive guides, language reference and examples are available at: **[https://epoxylang.vercel.app](https://epoxylang.vercel.app)**
+Comprehensive guides, language reference and examples are available at: **[https://epoxylang.vercel.app](https://epoxylang.js.org)**
 
 ---
 
