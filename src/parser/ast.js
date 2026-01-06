@@ -8,10 +8,10 @@ class Program {
 class AssignStatement {
     constructor({ isGlobal, isFix, name, dataType, value }) {
         this.type = "AssignStatement";
-        this.isGlobal = isGlobal; // all -> var
-        this.isFix = isFix; // fix -> const
+        this.isGlobal = isGlobal;
+        this.isFix = isFix;
         this.name = name;
-        this.dataType = dataType; //null allowed
+        this.dataType = dataType;
         this.value = value;
     }
 }
@@ -19,8 +19,8 @@ class AssignStatement {
 class StoreStatement {
     constructor({ isGlobal, isFix, name, value }) {
         this.type = "StoreStatement";
-        this.isGlobal = isGlobal; // all -> var
-        this.isFix = isFix; // fix -> const
+        this.isGlobal = isGlobal;
+        this.isFix = isFix;
         this.name = name;
         this.value = value;
     }
@@ -147,7 +147,7 @@ class RepeatFor {
         this.end = end;
         this.step = step;
         this.body = body;
-        this.arrayName = arrayName; // For array iteration: repeat[x in arrayName]
+        this.arrayName = arrayName;
     }
 }
 
@@ -167,18 +167,18 @@ class InputExpression {
 class MethodCall {
     constructor(targetType, target, methodName, args) {
         this.type = "MethodCall";
-        this.targetType = targetType; // "array" or "string"
-        this.target = target; // variable name (Identifier or expression)
-        this.methodName = methodName; // method name like "append", "upper"
-        this.args = args; // array of argument expressions
+        this.targetType = targetType;
+        this.target = target;
+        this.methodName = methodName;
+        this.args = args;
     }
 }
 
 class LambdaExpression {
     constructor(params, body) {
         this.type = "LambdaExpression";
-        this.params = params; // array of parameter names
-        this.body = body; // expression
+        this.params = params;
+        this.body = body;
     }
 }
 

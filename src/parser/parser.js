@@ -53,7 +53,6 @@ class Parser {
     validateStoreString(token) {
         const text = token.value;
 
-        // if contains 'call' outside [ ]
         const illegalCallOutsideBox = /(^|[^\[])\bcall\b/.test(text);
         const boxedCall = /\[.*\bcall\b.*\]/.test(text);
 
@@ -72,20 +71,19 @@ class Parser {
         return new Program(statements);
     }
 
-
     parseStatement() {
         const t = this.current().type;
 
-        // Handle assign with optional all/fix prefix
+
         if (t === TokenType.ALL || t === TokenType.FIX || t === TokenType.ASSIGN) {
-            // Check if it's assign (could be "assign", "all assign", or "fix assign")
+
             if (t === TokenType.ASSIGN) return this.parseAssign();
             if (this.peekType() === TokenType.ASSIGN) return this.parseAssign();
         }
 
-        // Handle store with optional all/fix prefix
+
         if (t === TokenType.ALL || t === TokenType.FIX || t === TokenType.STORE) {
-            // Check if it's store (could be "store", "all store", or "fix store")
+
             if (t === TokenType.STORE) return this.parseStore();
             if (this.peekType() === TokenType.STORE) return this.parseStore();
         }
@@ -107,12 +105,11 @@ class Parser {
         throw new Error("Unknown statement: " + t);
     }
 
-
     parseAssign() {
         let isGlobal = false;
         let isFix = false;
 
-        // Check for 'all' or 'fix' prefix
+
         if (this.current().type === TokenType.ALL) {
             isGlobal = true;
             this.eat(TokenType.ALL);
@@ -133,9 +130,9 @@ class Parser {
             this.eat(TokenType.TYPE);
         }
 
-        // Check if this is a declaration without assignment
+
         if (this.current().type === TokenType.SEMICOLON) {
-            // Declaration only: assign name as type;
+
             if (!dataType) {
                 throw new Error(
                     "assign: datatype required when declaring variable without value"
@@ -154,7 +151,7 @@ class Parser {
         this.eat(TokenType.EQUAL);
         const value = this.parseExpression();
 
-        // enforce rule
+
         if (value.type === "CallExpression" && !dataType) {
             throw new Error(
                 "assign: datatype required when assigning function call result"
@@ -179,7 +176,7 @@ class Parser {
         let isGlobal = false;
         let isFix = false;
 
-        // Check for 'all' or 'fix' prefix
+
         if (this.current().type === TokenType.ALL) {
             isGlobal = true;
             this.eat(TokenType.ALL);
@@ -244,25 +241,25 @@ class Parser {
     parsePrimary() {
         const tok = this.current();
 
-        // Handle unary minus for negative numbers
+
         if (tok.type === TokenType.MINUS) {
             this.eat(TokenType.MINUS);
             const expr = this.parsePrimary();
-            // If it's a literal number, negate it directly
+
             if (expr.type === "Literal" && typeof expr.value === "number") {
                 return new Literal(-expr.value);
             }
-            // Otherwise create a binary expression: 0 - expr
+
             return new BinaryExpression(new Literal(0), TokenType.MINUS, expr);
         }
 
-        // Handle unary plus (just ignore it)
+
         if (tok.type === TokenType.PLUS) {
             this.eat(TokenType.PLUS);
             return this.parsePrimary();
         }
 
-        // Parentheses for precedence
+
         if (tok.type === TokenType.LPAREN) {
             this.eat(TokenType.LPAREN);
             const expr = this.parseExpression();
@@ -270,7 +267,7 @@ class Parser {
             return expr;
         }
 
-        // literals
+
         if (
             tok.type === TokenType.NUMBER ||
             tok.type === TokenType.STRING ||
@@ -282,28 +279,28 @@ class Parser {
             return new Literal(tok.value);
         }
 
-        // :input special value
+
         if (tok.type === TokenType.INPUT) {
             this.pos++;
             return new InputExpression();
         }
 
-        // Lambda expression: [x] -> expr or [x, y] -> expr
+
         if (tok.type === TokenType.LBRACKET) {
-            // Peek ahead to check if this is a lambda or array literal
-            // Lambda: [identifier] -> or [identifier, identifier] ->
-            // Array: [expression, ...] or empty []
+
+
+
 
             const savedPos = this.pos;
             this.eat(TokenType.LBRACKET);
 
-            // Check if it's a lambda by looking for pattern: identifier(s) followed by ] ->
+
             let isLambda = false;
             if (this.current().type === TokenType.IDENTIFIER) {
                 const tempPos = this.pos;
                 this.eat(TokenType.IDENTIFIER);
 
-                // Check for comma (multiple params) or closing bracket
+
                 while (this.current().type === TokenType.COMMA) {
                     this.eat(TokenType.COMMA);
                     if (this.current().type !== TokenType.IDENTIFIER) {
@@ -312,17 +309,17 @@ class Parser {
                     this.eat(TokenType.IDENTIFIER);
                 }
 
-                // If we have ] followed by ->, it's a lambda
+
                 if (this.current().type === TokenType.RBRACKET && this.peekType() === TokenType.ARROW) {
                     isLambda = true;
                 }
 
-                // Restore position to after the opening bracket
+
                 this.pos = tempPos;
             }
 
             if (isLambda) {
-                // Parse lambda: [params] -> body
+
                 const params = [];
                 params.push(this.current().value);
                 this.eat(TokenType.IDENTIFIER);
@@ -338,17 +335,17 @@ class Parser {
                 const body = this.parseExpression();
                 return new LambdaExpression(params, body);
             } else {
-                // Restore position and parse as array literal
+
                 this.pos = savedPos;
-                // Fall through to array literal parsing below
+
             }
         }
 
-        // call expression
+
         if (tok.type === TokenType.CALL) {
             this.eat(TokenType.CALL);
 
-            // Regular function call: call functionName[args]
+
             const name = this.current().value;
             this.eat(TokenType.IDENTIFIER);
 
@@ -368,7 +365,7 @@ class Parser {
             return new CallExpression(name, args);
         }
 
-        // array literal
+
         if (this.current().type === TokenType.LBRACE) {
             this.eat(TokenType.LBRACE);
 
@@ -387,9 +384,9 @@ class Parser {
         }
 
 
-        // identifier or lambda expression (x -> expr)
+
         if (tok.type === TokenType.IDENTIFIER) {
-            // Check if this is a lambda: identifier -> expression
+
             if (this.peekType() === TokenType.ARROW) {
                 const param = tok.value;
                 this.eat(TokenType.IDENTIFIER);
@@ -401,7 +398,7 @@ class Parser {
             this.pos++;
             let node = new Identifier(tok.value);
 
-            // array access: test{index}
+
             if (this.current().type === TokenType.LBRACE) {
                 this.eat(TokenType.LBRACE);
                 const index = this.parseExpression();
@@ -412,26 +409,26 @@ class Parser {
             return node;
         }
 
-        // method call as expression
+
         if (tok.type === TokenType.METHOD) {
             this.eat(TokenType.METHOD);
             this.eat(TokenType.COLON);
 
-            // Get the target type (array or string)
+
             const targetType = this.current().value;
             this.eat(TokenType.TYPE);
 
-            // Get the target variable
+
             const target = this.current().value;
             this.eat(TokenType.IDENTIFIER);
 
             this.eat(TokenType.DOT);
 
-            // Get the method name
+
             const methodName = this.current().value;
             this.eat(TokenType.IDENTIFIER);
 
-            // Parse arguments in brackets
+
             this.eat(TokenType.LBRACKET);
             const args = [];
 
@@ -662,12 +659,12 @@ class Parser {
 
         this.eat(TokenType.IN);
 
-        // Check if this is array iteration: repeat[x in arrayName]
-        // or numeric range: repeat[i in 0 to 5, 1]
+
+
         const firstToken = this.current();
 
         if (firstToken.type === TokenType.IDENTIFIER && this.peekType(1) === TokenType.RBRACKET) {
-            // Array iteration: repeat[x in arrayName]
+
             const arrayName = firstToken.value;
             this.eat(TokenType.IDENTIFIER);
             this.eat(TokenType.RBRACKET);
@@ -681,7 +678,7 @@ class Parser {
 
             return new RepeatFor(varName, null, null, null, body, arrayName);
         } else {
-            // Numeric range: repeat[i in 0 to 5, 1]
+
             const start = this.parseExpression();
             this.eat(TokenType.TO);
             const end = this.parseExpression();
@@ -705,7 +702,7 @@ class Parser {
     parseShow() {
         this.eat(TokenType.SHOW);
 
-        // allow full expressions
+
         const value = this.parseExpression();
 
         this.eat(TokenType.SEMICOLON);
@@ -714,14 +711,14 @@ class Parser {
     }
 
     parseError() {
-        // Handle both 'error' and 'snafu' keywords
+
         if (this.current().type === TokenType.ERROR) {
             this.eat(TokenType.ERROR);
         } else {
             this.eat(TokenType.SNAFU);
         }
 
-        // allow full expressions
+
         const value = this.parseExpression();
 
         this.eat(TokenType.SEMICOLON);
@@ -745,21 +742,21 @@ class Parser {
         this.eat(TokenType.METHOD);
         this.eat(TokenType.COLON);
 
-        // Get the target type (array or string)
+
         const targetType = this.current().value;
         this.eat(TokenType.TYPE);
 
-        // Get the target variable
+
         const target = this.current().value;
         this.eat(TokenType.IDENTIFIER);
 
         this.eat(TokenType.DOT);
 
-        // Get the method name
+
         const methodName = this.current().value;
         this.eat(TokenType.IDENTIFIER);
 
-        // Parse arguments in brackets
+
         this.eat(TokenType.LBRACKET);
         const args = [];
 

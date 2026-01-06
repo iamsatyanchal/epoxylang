@@ -1,6 +1,6 @@
 {
   "name": "epoxylang",
-  "version": "0.1.20",
+  "version": "0.1.23",
   "type": "module",
   "bin": {
     "epoxy": "./bin/epoxy.js"

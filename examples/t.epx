@@ -1,0 +1,23 @@
+$ make bubbleSort[arr]{
+$     assign n as int = method:array arr.size[];
+$     repeat[i in 0 to (n-1), 1]{
+$         repeat[j in 0 to (n-i-2), 1]{
+$             check[arr{j} > arr{j+1}]{
+$                 assign temp = arr{j};
+$                 @js :~
+$                     arr[j] = arr[j+1];
+$                     arr[j+1] = temp;
+$                 ~:
+$             }
+$         }
+$     }
+$     give arr;
+$ }
+$ assign numbers as array = {64, 34, 25, 12, 22, 11, 90};
+$ assign sorted as array = call bubbleSort[numbers];
+$ show sorted;
+$ show method:array numbers.sort[];
+
+show "Enter your name";
+assign name = :input;
+show "Hello, " + name + "!";

@@ -88,10 +88,10 @@ class Lexer {
     }
 
     readJSBlock() {
-        // We're at '@', check if next chars are 'js~'
-        this.advance(); // skip '@'
 
-        // Read 'js'
+        this.advance();
+
+
         if (this.current !== 'j') {
             throw new Error("Expected 'js' after '@'");
         }
@@ -102,7 +102,7 @@ class Lexer {
         }
         this.advance();
 
-        // Skip any whitespace before ~
+
         this.skipWhitespace();
         if (this.current !== ':') {
             throw new Error("Expected ':' after '@js'");
@@ -112,9 +112,9 @@ class Lexer {
         if (this.current !== '~') {
             throw new Error("Expected '~' after '@js'");
         }
-        this.advance(); // skip opening '~'
+        this.advance();
 
-        // Capture everything until closing '~'
+
         let code = "";
 
         while (this.current && this.current !== '~' && this.peek !== ':') {
@@ -126,8 +126,8 @@ class Lexer {
             throw new Error("Unterminated @js block - missing closing '~:'");
         }
 
-        this.advance(); // skip closing '~'
-        this.advance(); // skip closing ':'
+        this.advance();
+        this.advance();
 
         return new Token(TokenType.JSBLOCK, code);
     }
@@ -139,7 +139,7 @@ class Lexer {
                 continue;
             }
 
-            // comment
+
             if (this.current === "$") {
                 while (this.current && this.current !== "\n") {
                     this.advance();
@@ -147,18 +147,18 @@ class Lexer {
                 continue;
             }
 
-            // @js blocks for raw JavaScript
+
             if (this.current === "@") return this.readJSBlock();
 
             if (/[0-9]/.test(this.current)) return this.readNumber();
             if (/[a-zA-Z_]/.test(this.current)) return this.readWord();
             if (`'"\``.includes(this.current)) return this.readString();
 
-            // :input special syntax
+
             if (this.current === ":" && this.peek() === "i") {
-                // Check if it's ":input"
+
                 const saved = this.pos;
-                this.advance(); // skip ':'
+                this.advance();
                 let word = "";
                 while (this.current && /[a-zA-Z_]/.test(this.current)) {
                     word += this.current;
@@ -167,20 +167,20 @@ class Lexer {
                 if (word === "input") {
                     return new Token(TokenType.INPUT);
                 }
-                // Not :input, restore position
+
                 this.pos = saved;
                 this.current = this.input[this.pos];
-                // If not :input, fall through to handle : as COLON token
+
             }
 
-            // three-char operators (check BEFORE two-char!)
+
             const peek1 = this.peek();
             const peek2 = this.pos + 2 < this.input.length ? this.input[this.pos + 2] : null;
             const threeChar = this.current + peek1 + peek2;
             if (threeChar === "===") { this.advance(); this.advance(); this.advance(); return new Token(TokenType.EQEQEQ); }
             if (threeChar === "!==") { this.advance(); this.advance(); this.advance(); return new Token(TokenType.NOTEQEQ); }
 
-            // double-char operators
+
             const twoChar = this.current + this.peek();
             if (twoChar === "==") { this.advance(); this.advance(); return new Token(TokenType.EQEQ); }
             if (twoChar === "!=") { this.advance(); this.advance(); return new Token(TokenType.NOTEQ); }
@@ -188,7 +188,7 @@ class Lexer {
             if (twoChar === "<=") { this.advance(); this.advance(); return new Token(TokenType.LTE); }
             if (twoChar === "->") { this.advance(); this.advance(); return new Token(TokenType.ARROW); }
 
-            // single-char
+
             const single = {
                 "=": TokenType.EQUAL,
                 "+": TokenType.PLUS,

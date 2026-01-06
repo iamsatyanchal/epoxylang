@@ -47,7 +47,7 @@ class JSCodeGenerator {
 
 
     visitAssignStatement(node) {
-        // Determine the JavaScript keyword based on mutability flags
+
         let keyword;
         if (node.isFix) {
             keyword = "const";
@@ -57,7 +57,7 @@ class JSCodeGenerator {
             keyword = "let";
         }
 
-        // Handle declaration without assignment
+
         if (node.value === null) {
             return `${keyword} ${node.name};`;
         }
@@ -72,7 +72,7 @@ class JSCodeGenerator {
     }
 
     visitRawJSBlock(node) {
-        // Return the raw JavaScript code as-is
+
         return node.code;
     }
 
@@ -107,7 +107,7 @@ class JSCodeGenerator {
             if (text[i] === "[") {
                 let depth = 1;
                 let expr = "";
-                i++; // skip '['
+                i++;
 
                 while (i < text.length && depth > 0) {
                     if (text[i] === "[") depth++;
@@ -121,7 +121,7 @@ class JSCodeGenerator {
                     throw new Error("Unmatched [ in store interpolation");
                 }
 
-                // parse boxed expression safely
+
                 const jsExpr = this.convertInlineExpression(expr.trim());
                 result += "${" + jsExpr + "}";
 
@@ -149,7 +149,7 @@ class JSCodeGenerator {
 
 
     visitStoreStatement(node) {
-        // Determine the JavaScript keyword based on mutability flags
+
         let keyword;
         if (node.isFix) {
             keyword = "const";
@@ -164,14 +164,10 @@ class JSCodeGenerator {
     }
 
     visitShowStatement(node) {
-        // Check if the value is a backtick string literal that needs interpolation
         if (node.value.type === "Literal" && typeof node.value.value === "string") {
-            // We need to check the original token to see if it was a backtick string
-            // Since we don't have access to the token here, we'll handle it differently
-            // by creating a template literal if the string contains []
             const str = node.value.value;
             if (str.includes("[") && str.includes("]")) {
-                // This might be an interpolated string, convert it
+
                 const interpolated = this.convertInterpolation(str);
                 return `console.log(\`${interpolated}\`);`;
             }
@@ -180,11 +176,11 @@ class JSCodeGenerator {
     }
 
     visitErrorStatement(node) {
-        // Check if the value is a backtick string literal that needs interpolation
+
         if (node.value.type === "Literal" && typeof node.value.value === "string") {
             const str = node.value.value;
             if (str.includes("[") && str.includes("]")) {
-                // This might be an interpolated string, convert it
+
                 const interpolated = this.convertInterpolation(str);
                 return `console.error("\x1b[31m" + \`${interpolated}\` + "\x1b[0m");`;
             }
@@ -253,7 +249,7 @@ class JSCodeGenerator {
         const v = node.varName;
         const body = node.body.map(s => this.visit(s)).join("\n");
 
-        // Handle array iteration: repeat[x in arrayName]
+
         if (node.arrayName) {
             return `
             for (let ${v} = 0; ${v} < ${node.arrayName}.length; ${v} ++) {
@@ -261,13 +257,13 @@ ${body}
             } `.trim();
         }
 
-        // Handle numeric range with bidirectional support
+
         const start = this.visit(node.start);
         const end = this.visit(node.end);
         const step = this.visit(node.step);
 
-        // Generate bidirectional loop: compare start and end at runtime
-        // If start <= end: increment, else: decrement
+
+
         return `
             for (let ${v} = ${start}; ${start} <= ${end} ? ${v} <= ${end} : ${v} >= ${end}; ${start} <= ${end} ? ${v} += ${step} : ${v} -= ${step}) {
 ${body}
@@ -289,43 +285,43 @@ ${body}
         const methodName = node.methodName;
         const args = node.args;
 
-        // Array methods
+
         if (node.targetType === "array") {
             switch (methodName) {
                 case "append":
-                    // .append[value] -> .push(value)
+
                     if (args.length !== 1) {
                         throw new Error("append requires exactly 1 argument");
                     }
                     return `${target}.push(${this.visit(args[0])})`;
 
                 case "pop":
-                    // .pop[] -> .pop()
+
                     return `${target}.pop()`;
 
                 case "includes":
-                    // .includes[value] -> .includes(value)
+
                     if (args.length !== 1) {
                         throw new Error("includes requires exactly 1 argument");
                     }
                     return `${target}.includes(${this.visit(args[0])})`;
 
                 case "filter":
-                    // .filter[call [x] -> x % 2 == 0] -> .filter((x) => x % 2 === 0)
+
                     if (args.length !== 1) {
                         throw new Error("filter requires exactly 1 argument (lambda function)");
                     }
                     return `${target}.filter(${this.visit(args[0])})`;
 
                 case "map":
-                    // .map[call [x] -> x * 2] -> .map((x) => x * 2)
+
                     if (args.length !== 1) {
                         throw new Error("map requires exactly 1 argument (lambda function)");
                     }
                     return `${target}.map(${this.visit(args[0])})`;
 
                 case "join":
-                    // .join[separator] -> .join(separator) or .join() for default
+
                     if (args.length === 0) {
                         return `${target}.join()`;
                     } else if (args.length === 1) {
@@ -335,11 +331,11 @@ ${body}
                     }
 
                 case "size":
-                    // .size[] -> .length
+
                     return `${target}.length`;
 
                 case "merge":
-                    // .merge[array2, array3, ...] -> .concat(array2, array3, ...)
+
                     if (args.length === 0) {
                         throw new Error("merge requires at least 1 argument");
                     }
@@ -347,23 +343,23 @@ ${body}
                     return `${target}.concat(${mergeArgs})`;
 
                 case "sort":
-                    // .sort[] -> .sort((a, b) => a - b) [numeric sort]
+
                     return `${target}.sort((a, b) => a - b)`;
 
                 case "max":
-                    // .max[]
+
                     return `Math.max.apply(null, ${target})`;
 
                 case "min":
-                    // .max[]
+
                     return `Math.min.apply(null, ${target})`;
 
                 case "alphasort":
-                    // .alphasort[] -> .sort() [lexicographic/alphabetical sort]
+
                     return `${target}.sort()`;
 
                 case "slice":
-                    // .slice[pythonSlice] -> .slice(start, end)
+
                     if (args.length !== 1) {
                         throw new Error("slice requires exactly 1 argument (slice notation)");
                     }
@@ -374,34 +370,41 @@ ${body}
             }
         }
 
-        // String methods
+
         if (node.targetType === "string") {
             switch (methodName) {
                 case "upper":
-                    // .upper[] -> .toUpperCase()
+
                     return `${target}.toUpperCase()`;
 
                 case "lower":
-                    // .lower[] -> .toLowerCase()
+
                     return `${target}.toLowerCase()`;
 
                 case "size":
-                    // .size[] -> .length
+
                     return `${target}.length`;
 
                 case "includes":
-                    // .includes[value] -> .includes(value)
+
                     if (args.length !== 1) {
                         throw new Error("includes requires exactly 1 argument");
                     }
                     return `${target}.includes(${this.visit(args[0])})`;
 
                 case "replace":
-                    // .replace["old" with "new"] -> .replace("old", "new")
+
                     if (args.length !== 2) {
                         throw new Error("replace requires exactly 2 arguments (old, new)");
                     }
                     return `${target}.replace(${this.visit(args[0])}, ${this.visit(args[1])})`;
+
+                case "replaceall":
+
+                    if (args.length !== 2) {
+                        throw new Error("replaceall requires exactly 2 arguments (old, new)");
+                    }
+                    return `${target}.replaceAll(${this.visit(args[0])}, ${this.visit(args[1])})`;
 
                 default:
                     throw new Error(`Unknown string method: ${methodName} `);
@@ -412,30 +415,30 @@ ${body}
     }
 
     visitLambdaExpression(node) {
-        // Convert lambda to arrow function: call [x] -> x % 2 == 0 => (x) => x % 2 === 0
+
         const params = node.params.join(", ");
         const body = this.visit(node.body);
         return `(${params}) => ${body} `;
     }
 
     convertPythonSlice(target, sliceExpr) {
-        // Handle Python-style slicing: ::2, 2:5, ::-1
-        // This is a simplified version - you'd need to parse the slice notation
-        // For now, let's assume sliceExpr is a string literal
+
+
+
 
         if (sliceExpr.type === "Literal" && typeof sliceExpr.value === "string") {
             const slice = sliceExpr.value;
 
-            // Parse slice notation
+
             if (slice === "::-1") {
-                // Reverse array
+
                 return `${target}.slice().reverse() `;
             } else if (slice.startsWith("::")) {
-                // Every nth element
+
                 const step = parseInt(slice.substring(2));
                 return `${target}.filter((_, i) => i % ${step} === 0) `;
             } else if (slice.includes(":")) {
-                // Range slice
+
                 const parts = slice.split(":");
                 const start = parts[0] || "0";
                 const end = parts[1] || `${target}.length`;
