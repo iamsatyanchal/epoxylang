@@ -1,6 +1,5 @@
 const TokenType = {
     // keywords
-    ASSIGN: "ASSIGN",
     ALL: "ALL",
     FIX: "FIX",
     UPDATE: "UPDATE",
@@ -19,10 +18,11 @@ const TokenType = {
     AS: "AS",
     SHOW: "SHOW",
     ERROR: "ERROR",
-    SNAFU: "SNAFU",
+    PANIC: "PANIC",
     SKIP: "SKIP",
     HALT: "HALT",
     METHOD: "METHOD",
+    FOR: "FOR",
 
     // datatypes
     TYPE: "TYPE",
@@ -68,6 +68,7 @@ const TokenType = {
     COMMA: "COMMA",
     DOT: "DOT",
     COLON: "COLON",
+    PIPE: "PIPE",
 
     EOF: "EOF"
 };
@@ -81,7 +82,6 @@ class Token {
 }
 
 const KEYWORDS = {
-    assign: TokenType.ASSIGN,
     all: TokenType.ALL,
     fix: TokenType.FIX,
     update: TokenType.UPDATE,
@@ -100,10 +100,11 @@ const KEYWORDS = {
     as: TokenType.AS,
     show: TokenType.SHOW,
     error: TokenType.ERROR,
-    snafu: TokenType.SNAFU,
+    panic: TokenType.PANIC,
     skip: TokenType.SKIP,
     halt: TokenType.HALT,
     method: TokenType.METHOD,
+    for: TokenType.FOR,
 };
 
 const TYPES = [
