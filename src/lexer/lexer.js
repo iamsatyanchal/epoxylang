@@ -25,7 +25,6 @@ class Lexer {
     readNumber() {
         let num = "";
         let hasDecimal = false;
-
         while (this.current && (/[0-9]/.test(this.current) || (this.current === "." && !hasDecimal))) {
             if (this.current === ".") {
                 hasDecimal = true;
@@ -42,27 +41,21 @@ class Lexer {
             word += this.current;
             this.advance();
         }
-
         if (KEYWORDS[word]) {
             return new Token(KEYWORDS[word], word);
         }
-
         if (TYPES.includes(word)) {
             return new Token(TokenType.TYPE, word);
         }
-
         if (word === "true" || word === "false") {
             return new Token(TokenType.BOOLEAN, word === "true");
         }
-
         if (word === "null") {
             return new Token(TokenType.NULL, null);
         }
-
         if (word === "undefined") {
             return new Token(TokenType.UNDEFINED, undefined);
         }
-
         return new Token(TokenType.IDENTIFIER, word);
     }
 
@@ -70,65 +63,48 @@ class Lexer {
         const quote = this.current;
         let value = "";
         this.advance();
-
         while (this.current && this.current !== quote) {
             value += this.current;
             this.advance();
         }
-
         if (this.current !== quote) {
             throw new Error("Unterminated string");
         }
-
         this.advance();
-
         return new Token(TokenType.STRING, value, {
             quoteType: quote
         });
     }
 
     readJSBlock() {
-
         this.advance();
-
-
         if (this.current !== 'j') {
             throw new Error("Expected 'js' after '@'");
         }
         this.advance();
-
         if (this.current !== 's') {
             throw new Error("Expected 'js' after '@'");
         }
         this.advance();
-
-
         this.skipWhitespace();
         if (this.current !== ':') {
             throw new Error("Expected ':' after '@js'");
         }
         this.advance();
-
         if (this.current !== '~') {
             throw new Error("Expected '~' after '@js'");
         }
         this.advance();
-
-
         let code = "";
-
         while (this.current && this.current !== '~' && this.peek !== ':') {
             code += this.current;
             this.advance();
         }
-
         if (this.current !== '~' && this.peek !== ':') {
             throw new Error("Unterminated @js block - missing closing '~:'");
         }
-
         this.advance();
         this.advance();
-
         return new Token(TokenType.JSBLOCK, code);
     }
 
@@ -138,25 +114,17 @@ class Lexer {
                 this.skipWhitespace();
                 continue;
             }
-
-
             if (this.current === "$") {
                 while (this.current && this.current !== "\n") {
                     this.advance();
                 }
                 continue;
             }
-
-
             if (this.current === "@") return this.readJSBlock();
-
             if (/[0-9]/.test(this.current)) return this.readNumber();
             if (/[a-zA-Z_]/.test(this.current)) return this.readWord();
             if (`'"\``.includes(this.current)) return this.readString();
-
-
             if (this.current === ":" && this.peek() === "i") {
-
                 const saved = this.pos;
                 this.advance();
                 let word = "";
@@ -167,28 +135,20 @@ class Lexer {
                 if (word === "input") {
                     return new Token(TokenType.INPUT);
                 }
-
                 this.pos = saved;
                 this.current = this.input[this.pos];
-
             }
-
-
             const peek1 = this.peek();
             const peek2 = this.pos + 2 < this.input.length ? this.input[this.pos + 2] : null;
             const threeChar = this.current + peek1 + peek2;
             if (threeChar === "===") { this.advance(); this.advance(); this.advance(); return new Token(TokenType.EQEQEQ); }
             if (threeChar === "!==") { this.advance(); this.advance(); this.advance(); return new Token(TokenType.NOTEQEQ); }
-
-
             const twoChar = this.current + this.peek();
             if (twoChar === "==") { this.advance(); this.advance(); return new Token(TokenType.EQEQ); }
             if (twoChar === "!=") { this.advance(); this.advance(); return new Token(TokenType.NOTEQ); }
             if (twoChar === ">=") { this.advance(); this.advance(); return new Token(TokenType.GTE); }
             if (twoChar === "<=") { this.advance(); this.advance(); return new Token(TokenType.LTE); }
             if (twoChar === "->") { this.advance(); this.advance(); return new Token(TokenType.ARROW); }
-
-
             const single = {
                 "=": TokenType.EQUAL,
                 "+": TokenType.PLUS,
@@ -207,18 +167,16 @@ class Lexer {
                 ";": TokenType.SEMICOLON,
                 ",": TokenType.COMMA,
                 ".": TokenType.DOT,
-                ":": TokenType.COLON
+                ":": TokenType.COLON,
+                "|": TokenType.PIPE
             };
-
             if (single[this.current]) {
                 const t = single[this.current];
                 this.advance();
                 return new Token(t);
             }
-
             throw new Error("Unknown character: " + this.current);
         }
-
         return new Token(TokenType.EOF);
     }
 }
