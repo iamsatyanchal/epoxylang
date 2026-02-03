@@ -5,9 +5,9 @@ class Program {
     }
 }
 
-class AssignStatement {
+class StoreStatement {
     constructor({ isGlobal, isFix, name, dataType, value }) {
-        this.type = "AssignStatement";
+        this.type = "StoreStatement";
         this.isGlobal = isGlobal;
         this.isFix = isFix;
         this.name = name;
@@ -16,21 +16,12 @@ class AssignStatement {
     }
 }
 
-class StoreStatement {
-    constructor({ isGlobal, isFix, name, value }) {
-        this.type = "StoreStatement";
-        this.isGlobal = isGlobal;
-        this.isFix = isFix;
-        this.name = name;
-        this.value = value;
-    }
-}
-
 class UpdateStatement {
-    constructor({ name, value }) {
+    constructor({ name, value, indices = [] }) {
         this.type = "UpdateStatement";
         this.name = name;
         this.value = value;
+        this.indices = indices;
     }
 }
 
@@ -67,11 +58,12 @@ class IfStatement {
 }
 
 class FunctionDeclaration {
-    constructor(name, params, body) {
+    constructor(name, params, body, returnType = null) {
         this.type = "FunctionDeclaration";
         this.name = name;
         this.params = params;
         this.body = body;
+        this.returnType = returnType;
     }
 }
 
@@ -182,9 +174,18 @@ class LambdaExpression {
     }
 }
 
+class ForLoop {
+    constructor(init, condition, increment, body) {
+        this.type = "ForLoop";
+        this.init = init;
+        this.condition = condition;
+        this.increment = increment;
+        this.body = body;
+    }
+}
+
 export {
     Program,
-    AssignStatement,
     StoreStatement,
     UpdateStatement,
     BinaryExpression,
@@ -205,5 +206,6 @@ export {
     RawJSBlock,
     InputExpression,
     MethodCall,
-    LambdaExpression
+    LambdaExpression,
+    ForLoop
 };
