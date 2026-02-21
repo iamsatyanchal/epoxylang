@@ -207,6 +207,11 @@ class Parser {
             this.eat(TokenType.PLUS);
             return this.parsePrimary();
         }
+        if (tok.type === TokenType.BITWISE_NOT) {
+            this.eat(TokenType.BITWISE_NOT);
+            const expr = this.parsePrimary();
+            return new BinaryExpression(new Literal(-1), TokenType.BITWISE_XOR, expr);
+        }
         if (tok.type === TokenType.LPAREN) {
             this.eat(TokenType.LPAREN);
             const expr = this.parseExpression();
@@ -223,10 +228,20 @@ class Parser {
             this.pos++;
             return new Literal(tok.value);
         }
+        if (tok.type === TokenType.BITWISE_RSHIFT) {
+            this.pos++;
+            const right = this.parsePrimary();
+            return new BinaryExpression(new Literal(0), TokenType.BITWISE_RSHIFT, right);
+        }
+        if (tok.type === TokenType.BITWISE_LSHIFT) {
+            this.pos++;
+            const right = this.parsePrimary();
+            return new BinaryExpression(new Literal(0), TokenType.BITWISE_LSHIFT, right);
+        }
         if (tok.type === TokenType.POWER) {
             this.pos++;
             const exponent = this.parsePrimary();
-            return new BinaryExpression(tok, TokenType.POWER, exponent);
+            return new BinaryExpression(new Literal(1), TokenType.POWER, exponent);
         }
         if (tok.type === TokenType.INPUT) {
             this.pos++;
@@ -353,7 +368,12 @@ class Parser {
             this.current().type === TokenType.POWER ||
             this.current().type === TokenType.STAR ||
             this.current().type === TokenType.SLASH ||
-            this.current().type === TokenType.MODULO
+            this.current().type === TokenType.MODULO ||
+            this.current().type === TokenType.BITWISE_AND ||
+            this.current().type === TokenType.BITWISE_OR ||
+            this.current().type === TokenType.BITWISE_XOR ||
+            this.current().type === TokenType.BITWISE_LSHIFT ||
+            this.current().type === TokenType.BITWISE_RSHIFT
         ) {
             const op = this.current().type;
             this.pos++;
