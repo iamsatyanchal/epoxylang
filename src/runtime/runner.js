@@ -99,6 +99,21 @@ function __epoxy_validate_store___of_epoxy_lang_dont_use_this_name(funcName, val
         }
     }
     return value;
+}
+function __epoxy_slice___of_epoxy_lang_dont_use_this_name(arr, start, end, step) {
+    const len = arr.length;
+    // normalize index..: negative -> wrap from end, then clamp :)
+    function norm(idx, defaultVal) {
+        if (idx === undefined || idx === null) return defaultVal;
+        if (idx < 0) idx = len + idx;
+        return step > 0 ? Math.max(0, Math.min(idx, len)) : Math.max(-1, Math.min(idx, len - 1));
+    }
+    const s = norm(start, step > 0 ? 0 : len - 1);
+    const e = norm(end,   step > 0 ? len : -1);
+    const result = [];
+    if (step > 0) { for (let i = s; i < e; i += step) result.push(arr[i]); }
+    else { for (let i = s; i > e; i += step) result.push(arr[i]); }
+    return result;
 }`;
     const importinglangfuncs = `const promptSync_of_epoxy_lang_dont_use_this_name = require("prompt-sync");
 const input_of_epoxy_lang_dont_use_this_name = promptSync_of_epoxy_lang_dont_use_this_name();
