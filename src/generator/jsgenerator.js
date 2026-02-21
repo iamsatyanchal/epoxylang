@@ -347,17 +347,20 @@ class JSCodeGenerator {
     convertPythonSlice(target, sliceExpr) {
         if (sliceExpr.type === "Literal" && typeof sliceExpr.value === "string") {
             const slice = sliceExpr.value;
-            if (slice === "::-1") {
-                return `${target}.slice().reverse() `;
-            } else if (slice.startsWith("::")) {
-                const step = parseInt(slice.substring(2));
-                return `${target}.filter((_, i) => i % ${step} === 0) `;
-            } else if (slice.includes(":")) {
-                const parts = slice.split(":");
-                const start = parts[0] || "0";
-                const end = parts[1] || `${target}.length`;
-                return `${target}.slice(${start}, ${end}) `;
+            if (!slice.includes(":")) {
+                throw new Error("Invalid slice notation: " + slice);
             }
+            const parts = slice.split(":");
+            const rawStart = parts[0].trim();
+            const rawEnd = parts[1].trim();
+            const rawStep = parts.length >= 3 ? parts[2].trim() : "";
+            const stepVal = rawStep === "" ? 1 : parseInt(rawStep);
+            if (isNaN(stepVal) || stepVal === 0) {
+                throw new Error("Slice step cannot be zero or non-integer");
+            }
+            const startArg = rawStart === "" ? "null" : rawStart;
+            const endArg = rawEnd === "" ? "null" : rawEnd;
+            return `__epoxy_slice___of_epoxy_lang_dont_use_this_name(${target}, ${startArg}, ${endArg}, ${stepVal})`;
         }
         throw new Error("Invalid slice notation");
     }
