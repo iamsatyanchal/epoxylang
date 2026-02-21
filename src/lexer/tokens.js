@@ -58,6 +58,14 @@ const TokenType = {
     NOTEQEQ: "NOTEQEQ",
     ARROW: "ARROW",
 
+    // bitwise operators
+    BITWISE_AND: "BITWISE_AND",
+    BITWISE_OR: "BITWISE_OR",
+    BITWISE_XOR: "BITWISE_XOR",
+    BITWISE_NOT: "BITWISE_NOT",
+    BITWISE_LSHIFT: "BITWISE_LSHIFT",
+    BITWISE_RSHIFT: "BITWISE_RSHIFT",
+
     // symbols
     LBRACE: "LBRACE",
     RBRACE: "RBRACE",
@@ -135,7 +143,13 @@ const OP_MAP = {
     NOTEQ: "!=",
     NOTEQEQ: "!==",
     AND: "&&",
-    OR: "||"
+    OR: "||",
+    BITWISE_AND: "&",
+    BITWISE_OR: "|", // same as pipe above but i will use it in diff scenarios.. 
+    BITWISE_XOR: "^",
+    BITWISE_NOT: "~",
+    BITWISE_LSHIFT: "<<",
+    BITWISE_RSHIFT: ">>",
 };
 
 export {
