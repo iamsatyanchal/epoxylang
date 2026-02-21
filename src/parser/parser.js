@@ -82,6 +82,7 @@ class Parser {
         if (t === TokenType.CALL) return this.parseCall();
         if (t === TokenType.GIVE) return this.parseGive();
         if (t === TokenType.REPEAT && this.peekType() === TokenType.FOR) return this.parseFor();
+        // if (t === TokenType.FOR && this.peekType() === TokenType.LBRACKET) return this.parseFor();
         if (t === TokenType.REPEAT && this.peekType() === TokenType.LBRACKET) return this.parseRepeatFor();
         if (t === TokenType.REPEAT) return this.parseRepeatUntil();
         if (t === TokenType.SHOW) return this.parseShow();
@@ -222,9 +223,19 @@ class Parser {
             this.pos++;
             return new Literal(tok.value);
         }
+        if (tok.type === TokenType.POWER) {
+            this.pos++;
+            const exponent = this.parsePrimary();
+            return new BinaryExpression(tok, TokenType.POWER, exponent);
+        }
         if (tok.type === TokenType.INPUT) {
             this.pos++;
             return new InputExpression();
+        }
+        if (tok.type === TokenType.NOT) {
+            this.pos++;
+            const expr = this.parsePrimary();
+            return new UnaryExpression(TokenType.NOT, expr);
         }
         if (tok.type === TokenType.LBRACKET) {
             const savedPos = this.pos;
@@ -338,6 +349,7 @@ class Parser {
     parseFactor() {
         let node = this.parsePrimary();
         while (
+            this.current().type === TokenType.POWER ||
             this.current().type === TokenType.STAR ||
             this.current().type === TokenType.SLASH ||
             this.current().type === TokenType.MODULO
