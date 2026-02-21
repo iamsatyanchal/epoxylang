@@ -149,6 +149,7 @@ class Lexer {
             if (twoChar === ">=") { this.advance(); this.advance(); return new Token(TokenType.GTE); }
             if (twoChar === "<=") { this.advance(); this.advance(); return new Token(TokenType.LTE); }
             if (twoChar === "->") { this.advance(); this.advance(); return new Token(TokenType.ARROW); }
+            if (twoChar === "**") { this.advance(); this.advance(); return new Token(TokenType.POWER); }
             const single = {
                 "=": TokenType.EQUAL,
                 "+": TokenType.PLUS,
