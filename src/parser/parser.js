@@ -232,11 +232,12 @@ class Parser {
             this.pos++;
             return new InputExpression();
         }
-        if (tok.type === TokenType.NOT) {
-            this.pos++;
-            const expr = this.parsePrimary();
-            return new UnaryExpression(TokenType.NOT, expr);
-        }
+        // if (tok.type === TokenType.NOT) {
+        //     this.pos++;
+        //     const expr = this.parsePrimary();
+        //     return new UnaryExpression(TokenType.NOT, expr);
+        // }
+        // Note for me.. Ye abhi implement nhi kiye hai future me krenge direct !variable name true false ke case me.. 
         if (tok.type === TokenType.LBRACKET) {
             const savedPos = this.pos;
             this.eat(TokenType.LBRACKET);
