@@ -150,6 +150,8 @@ class Lexer {
             if (twoChar === "<=") { this.advance(); this.advance(); return new Token(TokenType.LTE); }
             if (twoChar === "->") { this.advance(); this.advance(); return new Token(TokenType.ARROW); }
             if (twoChar === "**") { this.advance(); this.advance(); return new Token(TokenType.POWER); }
+            if (twoChar === ">>") { this.advance(); this.advance(); return new Token(TokenType.BITWISE_RSHIFT); }
+            if (twoChar === "<<") { this.advance(); this.advance(); return new Token(TokenType.BITWISE_LSHIFT); }
             const single = {
                 "=": TokenType.EQUAL,
                 "+": TokenType.PLUS,
@@ -169,7 +171,11 @@ class Lexer {
                 ",": TokenType.COMMA,
                 ".": TokenType.DOT,
                 ":": TokenType.COLON,
-                "|": TokenType.PIPE
+                // "|": TokenType.PIPE  // commenting out because it will create conflict with bitwise or operator and i need it for method chaining..
+                "&": TokenType.BITWISE_AND,
+                "|": TokenType.BITWISE_OR,
+                "^": TokenType.BITWISE_XOR,
+                "~": TokenType.BITWISE_NOT,
             };
             if (single[this.current]) {
                 const t = single[this.current];
