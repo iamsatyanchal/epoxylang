@@ -100,9 +100,29 @@ function __epoxy_validate_store___of_epoxy_lang_dont_use_this_name(funcName, val
     }
     return value;
 }
+
+function __assertNumericArray___of_epoxy_lang_dont_use_this_name(arr, method) {
+    for (let x of arr) {
+        if (typeof x !== "number" || !Number.isFinite(x)) {
+            throw new Error(method + "only works on numeric arrays");
+        }
+    }
+}
+
+function __sum___of_epoxy_lang_dont_use_this_name(arr) {
+    __assertNumericArray___of_epoxy_lang_dont_use_this_name(arr, "sum");
+    return arr.reduce((a,b)=>a+b,0);
+}
+
+function __avg___of_epoxy_lang_dont_use_this_name(arr) {
+    if (arr.length === 0) return 0;
+    __assertNumericArray___of_epoxy_lang_dont_use_this_name(arr, "avg");
+    return arr.reduce((a,b)=>a+b,0) / arr.length;
+}
+
 function __epoxy_slice___of_epoxy_lang_dont_use_this_name(arr, start, end, step) {
     const len = arr.length;
-    // normalize index..: negative -> wrap from end, then clamp :)
+    // normalize index: negative -> wrap from end, then clamp
     function norm(idx, defaultVal) {
         if (idx === undefined || idx === null) return defaultVal;
         if (idx < 0) idx = len + idx;
