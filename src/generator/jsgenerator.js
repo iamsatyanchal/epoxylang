@@ -248,7 +248,14 @@ class JSCodeGenerator {
     }
 
     visitMethodCall(node) {
-        const target = node.target;
+        // console.log(node)
+        let target = node.target;
+        if (node.indices && node.indices.length > 0) {
+            for (const index of node.indices) {
+                target += `[${this.visit(index)}]`;
+            }
+        }
+        // console.log(node.indices)
         const methodName = node.methodName;
         const args = node.args;
         if (node.targetType === "array") {
@@ -314,6 +321,11 @@ class JSCodeGenerator {
                         throw new Error("every requires exactly 1 argument (lambda function)")
                     }
                     return `${target}.every(${this.visit(args[0])})`;
+                case "any":
+                    if (args.length !== 1) {
+                        throw new Error("any requires exactly 1 argument (lambda function)")
+                    }
+                    return `${target}.some(${this.visit(args[0])})`;
                 case "reduce":
                     // console.log(args.length);
                     if (args.length > 3 || args.length < 2) {
@@ -322,6 +334,16 @@ class JSCodeGenerator {
                     // console.log((args[1]))
                     // console.log(JSON.stringify(args))
                     return (`${target}.reduce((${args[0].name}, ${args[1].params}) => ${this.visit(args[1].body)}${args[2] != undefined ? `, ${this.visit(args[2])}` : ""})`);
+                case "find":
+                    if (args.length !== 1) {
+                        throw new Error("find requires exactly 1 argument (lambda function)");
+                    }
+                    return `${target}.find(${this.visit(args[0])})`;
+                case "findindex":
+                    if (args.length !== 1) {
+                        throw new Error("findindex requires exactly 1 argument (lambda function)");
+                    }
+                    return `${target}.findIndex(${this.visit(args[0])})`;
                 case "map":
                     if (args.length !== 1) {
                         throw new Error("map requires exactly 1 argument (lambda function)");
