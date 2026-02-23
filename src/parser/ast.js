@@ -157,12 +157,13 @@ class InputExpression {
 }
 
 class MethodCall {
-    constructor(targetType, target, methodName, args) {
+    constructor(targetType, target, methodName, args, indices) {
         this.type = "MethodCall";
         this.targetType = targetType;
         this.target = target;
         this.methodName = methodName;
         this.args = args;
+        this.indices = indices;
     }
 }
 
