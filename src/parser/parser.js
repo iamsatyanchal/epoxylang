@@ -329,12 +329,20 @@ class Parser {
             }
             this.pos++;
             let node = new Identifier(tok.value);
-            if (this.current().type === TokenType.LBRACE) {
+
+            while (this.current().type === TokenType.LBRACE) {
                 this.eat(TokenType.LBRACE);
                 const index = this.parseExpression();
                 this.eat(TokenType.RBRACE);
                 node = new ArrayAccess(node, index);
             }
+
+            // if (this.current().type === TokenType.LBRACE) {
+            //     this.eat(TokenType.LBRACE);
+            //     const index = this.parseExpression();
+            //     this.eat(TokenType.RBRACE);
+            //     node = new ArrayAccess(node, index);
+            // }
             return node;
         }
         if (tok.type === TokenType.METHOD) {
@@ -344,6 +352,13 @@ class Parser {
             this.eat(TokenType.TYPE);
             const target = this.current().value;
             this.eat(TokenType.IDENTIFIER);
+            const indices = [];
+            while (this.current().type === TokenType.LBRACE) {
+                this.eat(TokenType.LBRACE);
+                const index = this.parseExpression();
+                this.eat(TokenType.RBRACE);
+                indices.push(index);
+            }
             this.eat(TokenType.DOT);
             const methodName = this.current().value;
             this.eat(TokenType.IDENTIFIER);
@@ -357,7 +372,7 @@ class Parser {
                 }
             }
             this.eat(TokenType.RBRACKET);
-            return new MethodCall(targetType, target, methodName, args);
+            return new MethodCall(targetType, target, methodName, args, indices);
         }
         throw new Error("Invalid primary expression: " + tok.type);
     }
@@ -622,6 +637,13 @@ class Parser {
         this.eat(TokenType.TYPE);
         const target = this.current().value;
         this.eat(TokenType.IDENTIFIER);
+        const indices = [];
+        while (this.current().type === TokenType.LBRACE) {
+            this.eat(TokenType.LBRACE);
+            const index = this.parseExpression();
+            this.eat(TokenType.RBRACE);
+            indices.push(index);
+        }
         this.eat(TokenType.DOT);
         const methodName = this.current().value;
         this.eat(TokenType.IDENTIFIER);
@@ -636,8 +658,7 @@ class Parser {
         }
         this.eat(TokenType.RBRACKET);
         this.eat(TokenType.SEMICOLON);
-
-        return new MethodCall(targetType, target, methodName, args);
+        return new MethodCall(targetType, target, methodName, args, indices);
     }
 
     parseFor() {
