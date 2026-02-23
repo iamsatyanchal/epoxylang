@@ -411,13 +411,66 @@ class JSCodeGenerator {
                     return `${target}.toUpperCase()`;
                 case "lower":
                     return `${target}.toLowerCase()`;
-                case "size":
-                    return `${target}.length`;
+                case "trim":
+                    return `${target}.trim()`;
+                case "trimstart":
+                    return `${target}.trimStart()`;
+                case "trimend":
+                    return `${target}.trimEnd()`;
                 case "includes":
                     if (args.length !== 1) {
                         throw new Error("includes requires exactly 1 argument");
                     }
                     return `${target}.includes(${this.visit(args[0])})`;
+                case "startswith":
+                    if (args.length !== 1) {
+                        throw new Error("startswith requires exactly 1 argument");
+                    }
+                    return `${target}.startsWith(${this.visit(args[0])})`;
+                case "endswith":
+                    if (args.length !== 1) {
+                        throw new Error("endswith requires exactly 1 argument");
+                    }
+                    return `${target}.endsWith(${this.visit(args[0])})`;
+                case "indexof":
+                    if (args.length !== 1) {
+                        throw new Error("indexof requires exactly 1 argument");
+                    }
+                    return `${target}.indexOf(${this.visit(args[0])})`;
+                case "lastindexof":
+                    if (args.length !== 1) {
+                        throw new Error("lastindexof requires exactly 1 argument");
+                    }
+                    return `${target}.lastIndexOf(${this.visit(args[0])})`;
+                case "length":
+                    return `${target}.length`;
+                case "count":
+                    if (args.length !== 1) {
+                        throw new Error("count requires exactly 1 argument");
+                    }
+                    return `${target}.split(${this.visit(args[0])}).length - 1`;
+                case "isempty":
+                    return `${target}.length === 0`;
+                case "charat":
+                    if (args.length !== 1) {
+                        throw new Error("charat requires exactly 1 argument (index)");
+                    }
+                    return `${target}.charAt(${this.visit(args[0])})`;
+                case "split":
+                    if (args.length === 0) {
+                        return `${target}.split("")`;
+                    } else if (args.length === 1) {
+                        return `${target}.split(${this.visit(args[0])})`;
+                    } else {
+                        throw new Error("split requires 0 or 1 argument (separator)");
+                    }
+                case "reverse":
+                    return `${target}.split("").reverse().join("")`;
+                case "repeatstring":
+                    if (args.length !== 1) {
+                        throw new Error("repeatstring requires exactly 1 argument (count)");
+                    }
+                    return `${target}.repeat(${this.visit(args[0])})`;
                 case "replace":
                     if (args.length !== 2) {
                         throw new Error("replace requires exactly 2 arguments (old, new)");
@@ -428,6 +481,26 @@ class JSCodeGenerator {
                         throw new Error("replaceall requires exactly 2 arguments (old, new)");
                     }
                     return `${target}.replaceAll(${this.visit(args[0])}, ${this.visit(args[1])})`;
+                case "padstart":
+                    if (args.length === 1) {
+                        return `${target}.padStart(${this.visit(args[0])})`;
+                    } else if (args.length === 2) {
+                        return `${target}.padStart(${this.visit(args[0])}, ${this.visit(args[1])})`;
+                    } else {
+                        throw new Error("padstart requires 1 or 2 arguments (length [, fillChar])");
+                    }
+                case "padend":
+                    if (args.length === 1) {
+                        return `${target}.padEnd(${this.visit(args[0])})`;
+                    } else if (args.length === 2) {
+                        return `${target}.padEnd(${this.visit(args[0])}, ${this.visit(args[1])})`;
+                    } else {
+                        throw new Error("padend requires 1 or 2 arguments (length [, fillChar])");
+                    }
+                case "toint":
+                    return `parseInt(${target})`;
+                case "tofloat":
+                    return `parseFloat(${target})`;
                 default:
                     throw new Error(`Unknown string method: ${methodName} `);
             }
