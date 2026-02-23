@@ -355,12 +355,19 @@ class JSCodeGenerator {
                     } else if (args.length === 1) {
                         return `${target}.join(${this.visit(args[0])})`;
                     } else {
-                        throw new Error("join requires 0 or 1 argument");
+                        throw new Error("join requires 0 or 1 argument")
                     }
+                case "chunk":
+                    if (args.length !== 1) {
+                        throw new Error("chunk requires exactly 1 argument (size)");
+                    }
+                    return `__chunk___of_epoxy_lang_dont_use_this_name(${target}, ${this.visit(args[0])})`;
                 case "size":
                     return `${target}.length`;
                 case "isempty":
                     return `${target}.length === 0`;
+                case "unique":
+                    return `__unique___of_epoxy_lang_dont_use_this_name(${target})`;
                 case "merge":
                     if (args.length === 0) {
                         throw new Error("merge requires at least 1 argument");
@@ -379,6 +386,16 @@ class JSCodeGenerator {
                     return `Math.min.apply(null, ${target})`;
                 case "alphasort":
                     return `${target}.sort()`;
+                case "take":
+                    if (args.length !== 1) {
+                        throw new Error("take requires exactly 1 argument (size)");
+                    }
+                    return `${target}.slice(0, ${this.visit(args[0])})`;
+                case "drop":
+                    if (args.length !== 1) {
+                        throw new Error("drop requires exactly 1 argument (size)");
+                    }
+                    return `${target}.slice(${this.visit(args[0])})`;
                 case "slice":
                     if (args.length !== 1) {
                         throw new Error("slice requires exactly 1 argument (slice notation)");
