@@ -258,18 +258,70 @@ class JSCodeGenerator {
                         throw new Error("append requires exactly 1 argument");
                     }
                     return `${target}.push(${this.visit(args[0])})`;
+                case "prepend":
+                    if (args.length !== 1) {
+                        throw new Error("prepend requires exactly 1 argument");
+                    }
+                    return `${target}.unshift(${this.visit(args[0])})`;
+                case "insertat":
+                    if (args.length !== 2) {
+                        throw new Error("insertat requires exactly 2 arguments");
+                    }
+                    return `${target}.splice(${this.visit(args[0])}, 0, ${this.visit(args[1])})`;
+                case "replaceat":
+                    if (args.length !== 2) {
+                        throw new Error("replaceat requires exactly 2 arguments");
+                    }
+                    return `${target}.splice(${this.visit(args[0])}, 1, ${this.visit(args[1])})`;
+                case "removeat":
+                    if (args.length !== 1) {
+                        throw new Error("removeat requires exactly 1 argument");
+                    }
+                    return `${target}.splice(${this.visit(args[0])}, 1)`;
+                case "reverse":
+                    return `${target}.reverse()`;
+                case "empty":
+                    return `${target}.splice(0)`;
+                case "count":
+                    if (args.length !== 1) {
+                        throw new Error("count requires exactly 1 argument");
+                    }
+                    return `${target}.reduce((c, x) => x === ${this.visit(args[0])} ? c + 1 : c, 0)`;
                 case "pop":
                     return `${target}.pop()`;
-                case "includes":
+                case "contains":
                     if (args.length !== 1) {
-                        throw new Error("includes requires exactly 1 argument");
+                        throw new Error("contains requires exactly 1 argument");
                     }
                     return `${target}.includes(${this.visit(args[0])})`;
+                case "indexof":
+                    if (args.length !== 1) {
+                        throw new Error("indexof requires exactly 1 argument");
+                    }
+                    return `${target}.indexOf(${this.visit(args[0])})`;
+                case "lastindexof":
+                    if (args.length !== 1) {
+                        throw new Error("lastindexof requires exactly 1 argument");
+                    }
+                    return `${target}.lastIndexOf(${this.visit(args[0])})`;
                 case "filter":
                     if (args.length !== 1) {
                         throw new Error("filter requires exactly 1 argument (lambda function)");
                     }
                     return `${target}.filter(${this.visit(args[0])})`;
+                case "every":
+                    if (args.length !== 1) {
+                        throw new Error("every requires exactly 1 argument (lambda function)")
+                    }
+                    return `${target}.every(${this.visit(args[0])})`;
+                case "reduce":
+                    // console.log(args.length);
+                    if (args.length > 3 || args.length < 2) {
+                        throw new Error("reduce requires more than 2 and less than 3 arguments (lambda function)");
+                    }
+                    // console.log((args[1]))
+                    // console.log(JSON.stringify(args))
+                    return (`${target}.reduce((${args[0].name}, ${args[1].params}) => ${this.visit(args[1].body)}${args[2] != undefined ? `, ${this.visit(args[2])}` : ""})`);
                 case "map":
                     if (args.length !== 1) {
                         throw new Error("map requires exactly 1 argument (lambda function)");
@@ -285,6 +337,8 @@ class JSCodeGenerator {
                     }
                 case "size":
                     return `${target}.length`;
+                case "isempty":
+                    return `${target}.length === 0`;
                 case "merge":
                     if (args.length === 0) {
                         throw new Error("merge requires at least 1 argument");
@@ -293,6 +347,10 @@ class JSCodeGenerator {
                     return `${target}.concat(${mergeArgs})`;
                 case "sort":
                     return `${target}.sort((a, b) => a - b)`;
+                case "sum":
+                    return `__sum___of_epoxy_lang_dont_use_this_name(${target})`;
+                case "avg":
+                    return `__avg___of_epoxy_lang_dont_use_this_name(${target})`;
                 case "max":
                     return `Math.max.apply(null, ${target})`;
                 case "min":
