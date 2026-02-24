@@ -3,6 +3,7 @@ import { TokenType } from "../lexer/tokens.js";
 import { Parser } from "../parser/parser.js";
 import { JSCodeGenerator } from "../generator/jsgenerator.js";
 import { createRequire } from "module";
+import vm from "node:vm";
 
 const require = createRequire(import.meta.url);
 
@@ -120,9 +121,22 @@ function __avg___of_epoxy_lang_dont_use_this_name(arr) {
     return arr.reduce((a,b)=>a+b,0) / arr.length;
 }
 
+function __unique___of_epoxy_lang_dont_use_this_name(arr) {
+    return [...new Set(arr)];
+}
+
+
+function __chunk___of_epoxy_lang_dont_use_this_name(arr, size) {
+    const result = [];
+    for (let i = 0; i < arr.length; i += size) {
+        result.push(arr.slice(i, i + size));
+    }
+    return result;
+}
+
 function __epoxy_slice___of_epoxy_lang_dont_use_this_name(arr, start, end, step) {
     const len = arr.length;
-    // normalize index: negative -> wrap from end, then clamp
+    // normalize index..: negative -> wrap from end, then clamp :)
     function norm(idx, defaultVal) {
         if (idx === undefined || idx === null) return defaultVal;
         if (idx < 0) idx = len + idx;
@@ -149,7 +163,12 @@ function smartConvert_of_epoxy_lang_dont_use_this_name(input) { try { return JSO
         ? finalcode_input
         : finalcode_noinput;
     //console.log(thisisthecode);
-    return eval(thisisthecode);
+    // return eval(thisisthecode);
+    const script = new vm.Script(thisisthecode);
+    return script.runInNewContext({
+        console,
+        require
+    });
 }
 
 export { tokenizeAll, compile, run };
