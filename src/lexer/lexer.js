@@ -96,11 +96,11 @@ class Lexer {
         }
         this.advance();
         let code = "";
-        while (this.current && this.current !== '~' && this.peek !== ':') {
+        while (this.current && !(this.current === '~' && this.peek() === ':')) {
             code += this.current;
             this.advance();
         }
-        if (this.current !== '~' && this.peek !== ':') {
+        if (!(this.current === '~' && this.peek() === ':')) {
             throw new Error("Unterminated @js block - missing closing '~:'");
         }
         this.advance();
