@@ -541,6 +541,98 @@ class JSCodeGenerator {
                     throw new Error(`Unknown string method: ${methodName} `);
             }
         }
+        if (node.targetType === "maths") {
+            switch (methodName) {
+                case "add":
+                    if (args.length !== 1) {
+                        throw new Error("add requires 1 argument (value)");
+                    }
+                    // console.log(`${target} + ${this.visit(args[0])}`);
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).add(${this.visit(args[0])})`;
+                case "sub":
+                    if (args.length !== 1) {
+                        throw new Error("sub requires 1 argument (value)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).sub(${this.visit(args[0])})`;
+                case "mul":
+                    if (args.length !== 1) {
+                        throw new Error("mul requires 1 argument (value)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).mul(${this.visit(args[0])})`;
+                case "div":
+                    if (args.length !== 1) {
+                        throw new Error("div requires 1 argument (value)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).div(${this.visit(args[0])})`;
+                case "modulo":
+                    if (args.length !== 1) {
+                        throw new Error("modulo requires 1 argument (value)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).modulo(${this.visit(args[0])})`;
+                case "power":
+                    if (args.length !== 1) {
+                        throw new Error("power requires 1 argument (value)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).pow(${this.visit(args[0])})`;
+                case "abs":
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).abs()`;
+                case "sqrt":
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).sqrt()`;
+                case "cbrt":
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).cbrt()`;
+                case "round":
+                    if (args.length === 0) {
+                        return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).toDecimalPlaces(0)`;
+                    } else if (args.length === 1) {
+                        return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).toDecimalPlaces(${this.visit(args[0])})`;
+                    } else {
+                        throw new Error("round requires 0 or 1 arguments (decimalPlaces)");
+                    }
+                case "floor":
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).floor()`;
+                case "ceil":
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).ceil()`;
+                case "roundup":
+                    if (args.length !== 1) {
+                        throw new Error("roundup requires 1 argument (decimalPlaces)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).toDecimalPlaces(${this.visit(args[0])}, __Decimal_of_epoxy_lang_dont_use_this_name.ROUND_UP)`;
+                case "rounddown":
+                    if (args.length !== 1) {
+                        throw new Error("rounddown requires 1 argument (decimalPlaces)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).toDecimalPlaces(${this.visit(args[0])}, __Decimal_of_epoxy_lang_dont_use_this_name.ROUND_DOWN)`;
+                case "roundhalf":
+                    if (args.length !== 1) {
+                        throw new Error("roundhalf requires 1 argument (decimalPlaces)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).toDecimalPlaces(${this.visit(args[0])}, __Decimal_of_epoxy_lang_dont_use_this_name.ROUND_HALF_EVEN)`;
+                case "log":
+                    if (args.length === 0) {
+                        return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).log()`;
+                    } else if (args.length === 1) {
+                        return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).log(${this.visit(args[0])})`;
+                    } else {
+                        throw new Error("log requires 0 or 1 arguments (base)");
+                    }
+                case "reciprocal":
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(1).div(${target})`;
+                case "exp":
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).exp()`;
+                case "precision":
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).precision()`;
+                case "tofixed":
+                    if (args.length !== 1) {
+                        throw new Error("tofixed requires 1 argument (decimalPlaces)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).toFixed(${this.visit(args[0])})`;
+                case "normpdf":
+                    //tbh i hate this probability thing bruhhh.. 1 / sqrt(2*pi) * e^(-x^2 / 2)
+                    return `normpdf_of_epoxy_lang_dont_use_this_name(${target})`
+                default:
+                    throw new Error(`Unknown maths method: ${methodName} `);
+            }
+        }
         throw new Error(`Unknown target type: ${node.targetType} `);
     }
 
