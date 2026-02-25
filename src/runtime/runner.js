@@ -28,6 +28,7 @@ function run(code) {
     const js = compile(code);
     // remove this before reading yrr `_of_epoxy_lang_dont_use_this_name` idk why but i love playing XD
     const typeCheckingRuntime = `
+const __Decimal_of_epoxy_lang_dont_use_this_name = require('decimal.js');
 const __epoxy_types___of_epoxy_lang_dont_use_this_name = {};
 const __epoxy_function_types___of_epoxy_lang_dont_use_this_name = {};
 function __epoxy_normalizeType___of_epoxy_lang_dont_use_this_name(type) {
@@ -165,7 +166,8 @@ function __epoxy_slice___of_epoxy_lang_dont_use_this_name(arr, start, end, step)
     else { for (let i = s; i > e; i += step) result.push(arr[i]); }
     return result;
 }`;
-    const importinglangfuncs = `const promptSync_of_epoxy_lang_dont_use_this_name = require("prompt-sync");
+    const importinglangfuncs = `
+    const promptSync_of_epoxy_lang_dont_use_this_name = require("prompt-sync");
 const input_of_epoxy_lang_dont_use_this_name = promptSync_of_epoxy_lang_dont_use_this_name();
 function smartConvert_of_epoxy_lang_dont_use_this_name(input) { try { return JSON.parse(input); } catch (e) { return input; } }`
     const finalcode_input = `
@@ -183,8 +185,10 @@ function smartConvert_of_epoxy_lang_dont_use_this_name(input) { try { return JSO
     const script = new vm.Script(thisisthecode);
     return script.runInNewContext({
         console,
-        require
+        require,
+        process
     });
 }
+
 
 export { tokenizeAll, compile, run };
