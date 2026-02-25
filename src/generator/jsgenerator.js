@@ -469,8 +469,10 @@ class JSCodeGenerator {
                         throw new Error("slice requires exactly 1 argument (python style slice notation)");
                     }
                     return this.convertPythonSlicestring(target, args[0]);
-                case "captitalize":
-                    return `${target.toUpper()}`
+                case "capitalize":
+                    return `${target}.charAt(0).toUpperCase() + ${target}.slice(1)`;
+                case "title":
+                    return `${target}.split(" ").map(thischar => thischar.charAt(0).toUpperCase() + thischar.slice(1)).join(" ")`;
                 case "reverse":
                     return `${target}.split("").reverse().join("")`;
                 case "repeatstring":
