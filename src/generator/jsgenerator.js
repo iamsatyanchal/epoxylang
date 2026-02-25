@@ -464,6 +464,13 @@ class JSCodeGenerator {
                     } else {
                         throw new Error("split requires 0 or 1 argument (separator)");
                     }
+                case "slice":
+                    if (args.length !== 1) {
+                        throw new Error("slice requires exactly 1 argument (python style slice notation)");
+                    }
+                    return this.convertPythonSlicestring(target, args[0]);
+                case "captitalize":
+                    return `${target.toUpper()}`
                 case "reverse":
                     return `${target}.split("").reverse().join("")`;
                 case "repeatstring":
@@ -531,6 +538,28 @@ class JSCodeGenerator {
             const startArg = rawStart === "" ? "null" : rawStart;
             const endArg = rawEnd === "" ? "null" : rawEnd;
             return `__epoxy_slice___of_epoxy_lang_dont_use_this_name(${target}, ${startArg}, ${endArg}, ${stepVal})`;
+        }
+        throw new Error("Invalid slice notation");
+    }
+
+
+    convertPythonSlicestring(target, sliceExpr) {
+        if (sliceExpr.type === "Literal" && typeof sliceExpr.value === "string") {
+            const slice = sliceExpr.value;
+            if (!slice.includes(":")) {
+                throw new Error("Invalid slice notation: " + slice);
+            }
+            const parts = slice.split(":");
+            const rawStart = parts[0].trim();
+            const rawEnd = parts[1].trim();
+            const rawStep = parts.length >= 3 ? parts[2].trim() : "";
+            const stepVal = rawStep === "" ? 1 : parseInt(rawStep);
+            if (isNaN(stepVal) || stepVal === 0) {
+                throw new Error("Slice step cannot be zero or non-integer");
+            }
+            const startArg = rawStart === "" ? "null" : rawStart;
+            const endArg = rawEnd === "" ? "null" : rawEnd;
+            return `__epoxy_slice_string___of_epoxy_lang_dont_use_this_name(${target}, ${startArg}, ${endArg}, ${stepVal})`;
         }
         throw new Error("Invalid slice notation");
     }
