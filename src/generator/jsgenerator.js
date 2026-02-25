@@ -489,17 +489,34 @@ class JSCodeGenerator {
                     if (args.length !== 1) {
                         throw new Error("remove requires exactly 1 argument (string to replace)");
                     }
-                    return `${target}.replace(${this.visit(args[0])}, "")`
+                    return `${target}.replace(${this.visit(args[0])}, "")`;
                 case "removeall":
                     if (args.length !== 1) {
                         throw new Error("removeall requires exactly 1 argument (string to replace)");
                     }
-                    return `${target}.replaceAll(${this.visit(args[0])}, "")`
+                    return `${target}.replaceAll(${this.visit(args[0])}, "")`;
                 case "replaceall":
                     if (args.length !== 2) {
                         throw new Error("replaceall requires exactly 2 arguments (old, new)");
                     }
                     return `${target}.replaceAll(${this.visit(args[0])}, ${this.visit(args[1])})`;
+                case "mask":
+                    if (args.length !== 3) {
+                        throw new Error("mask requires exactly 3 arguments (start, end, char)")
+                    }
+                    // console.log(`${this.visit(args[1])}`)
+                    // console.log(`${this.visit(args[0])}`)
+                    // console.log(`${this.visit(args[2])}`) wtf whyyyyyyy....
+                    // console.log(`${this.visit(args[1])} - ${this.visit(args[0])}`) oh lol.. for future reference.. plzz take a look at this.. `} - {` and direct `-`..
+                    return (`${target}.slice(0, ${this.visit(args[0])}) + ${this.visit(args[2])}.repeat(${this.visit(args[1])} - ${this.visit(args[0])}) + ${target}.slice(${this.visit(args[1])})`);
+                // return `${target}.slice(0, ${this.visit(args[0])}) + ${this.visit(args[2])}.repeat(${this.visit(args[1]) - this.visit(args[0])}) + ${target}.slice(${this.visit(args[1])})`;
+                case "isnumeric":
+                    return `/^[0-9]+$/.test(${target})`;
+                case "isalpha":
+                    return `/^[a-zA-Z]+$/.test(${target})`;
+                case "isalnum":
+                    // this checks for atleast a number and an alphabet :) idk but this will be helpful in passowrd work or something
+                    return `/^(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]+$/.test(${target})`;
                 case "padstart":
                     if (args.length === 1) {
                         return `${target}.padStart(${this.visit(args[0])})`;
