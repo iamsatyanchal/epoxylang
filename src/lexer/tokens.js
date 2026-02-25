@@ -35,6 +35,8 @@ const TokenType = {
     UNDEFINED: "UNDEFINED",
     INPUT: "INPUT",
 
+    MATHS: "MATHS",
+    QUANT: "QUANT",
     IDENTIFIER: "IDENTIFIER",
 
     // raw javascript
@@ -124,7 +126,9 @@ const TYPES = [
     "array",
     "null",
     "undefined",
-    "object"
+    "object",
+    "maths",
+    "quant"
 ];
 
 const OP_MAP = {
