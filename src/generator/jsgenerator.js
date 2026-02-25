@@ -633,6 +633,65 @@ class JSCodeGenerator {
                     throw new Error(`Unknown maths method: ${methodName} `);
             }
         }
+        if (node.targetType === "quant") {
+            switch (methodName) {
+                case "spread":
+                    // spread = ask - bid -> okay one easy formula
+                    if (args.length !== 1) {
+                        throw new Error("spread requires 1 argument (bid)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).minus(${this.visit(args[0])})`;
+                case "bps":
+                    /* bps - basic points
+                       spread = ask - bid
+                       bps = spread / bid * 10000  -> there are diff formulas for this with diff input but im using reference price.. idk maybe in future i'll introduce more params */
+                    if (args.length !== 1) {
+                        throw new Error("bps requires 1 argument (bid price)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).minus(${this.visit(args[0])}).div(${this.visit(args[0])}).times(10000)`;
+                case "pct":
+                    /* pct - percentage
+                       spread = ask - bid
+                       pct = spread / bid * 100 */
+                    if (args.length !== 1) {
+                        throw new Error("pct requires 1 argument (bid price)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).minus(${this.visit(args[0])}).div(${this.visit(args[0])}).times(100)`;
+                case "pnl":
+                    // pnl = (sell price - buy price) * quantity
+                    if (args.length !== 2) {
+                        throw new Error("pnl requires 2 arguments (buy price, quantity)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).minus(${this.visit(args[0])}).mul(${this.visit(args[1])})`;
+                case "mid":
+                    // mid = ask+bid)/2
+                    if (args.length !== 1) {
+                        throw new Error("mid requires 1 argument (bid)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).plus(${this.visit(args[0])}).div(2)`;
+                case "notional":
+                    // notional = price * qty
+                    if (args.length !== 1) {
+                        throw new Error("notional requires 1 arguments (price)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).mul(${this.visit(args[0])})`;
+                case "pip":
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).toDecimalPlaces(4)`;
+                case "tick":
+                    if (args.length !== 1) {
+                        throw new Error("tick requires 1 argument (size)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).div(${this.visit(args[0])}).round().mul(${this.visit(args[0])})`;
+                case "clamp":
+                    // clamp = max(min, min(max, d))
+                    if (args.length !== 2) {
+                        throw new Error("clamp requires 2 arguments (min, max)");
+                    }
+                    return `__Decimal_of_epoxy_lang_dont_use_this_name.max(${this.visit(args[0])}, __Decimal_of_epoxy_lang_dont_use_this_name.min(${this.visit(args[1])}, new __Decimal_of_epoxy_lang_dont_use_this_name(${target})))`;
+                default:
+                    throw new Error(`Unknown quant method: ${methodName}`);
+            }
+        }
         throw new Error(`Unknown target type: ${node.targetType} `);
     }
 
