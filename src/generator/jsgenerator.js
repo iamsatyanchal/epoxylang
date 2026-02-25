@@ -672,7 +672,7 @@ class JSCodeGenerator {
                 case "notional":
                     // notional = price * qty
                     if (args.length !== 1) {
-                        throw new Error("notional requires 1 arguments (price)");
+                        throw new Error("notional requires 1 argument (price)");
                     }
                     return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).mul(${this.visit(args[0])})`;
                 case "pip":
@@ -681,13 +681,125 @@ class JSCodeGenerator {
                     if (args.length !== 1) {
                         throw new Error("tick requires 1 argument (size)");
                     }
-                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).div(${this.visit(args[0])}).round().mul(${this.visit(args[0])})`;
+                    // .round is removed for a reason.. i will add a mode here.. with floor or ceil.. for buy and sell orders
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).div(${this.visit(args[0])}).mul(${this.visit(args[0])})`;
                 case "clamp":
                     // clamp = max(min, min(max, d))
                     if (args.length !== 2) {
                         throw new Error("clamp requires 2 arguments (min, max)");
                     }
                     return `__Decimal_of_epoxy_lang_dont_use_this_name.max(${this.visit(args[0])}, __Decimal_of_epoxy_lang_dont_use_this_name.min(${this.visit(args[1])}, new __Decimal_of_epoxy_lang_dont_use_this_name(${target})))`;
+                case "logret":
+                    if (args.length !== 1) {
+                        throw new Error("logret requires 1 argument (previous)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).div(${this.visit(args[0])}).ln()`;
+                case "leverage":
+                    if (args.length !== 1) {
+                        throw new Error("leverage requires 1 argument (equity)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).div(${this.visit(args[0])})`;
+                // case "margin":
+                //     if (args.length !== 1) {
+                //         throw new Error("margin requires 1 argument (leverage)");
+                //     }
+                //     return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).div(${this.visit(args[0])})`;
+
+                // idk man but im kinda confused in this formula.. wtf im so dumb bruhhh.. :/
+                case "drawdown":
+                    if (args.length !== 1) {
+                        throw new Error("drawdown requires 1 argument (peak)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${this.visit(args[0])}).minus(${target}).div(${this.visit(args[0])}).mul(100)`;
+                case "sharpe":
+                    // sharpe ratio = (returns -risk free rate)/ std_dev
+                    if (args.length !== 2) {
+                        throw new Error("sharpe requires 2 arguments (risk_free_rate, std_dev)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).minus(${this.visit(args[0])}).div(${this.visit(args[1])})`;
+                case "vwap":
+                    // vwap = (price*volume)/totalvol  --> these are basically for me to remember these formulas for futureeeee updatess... 
+                    if (args.length !== 2) {
+                        throw new Error("vwap requires 2 arguments (volume, total_volume)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).mul(${this.visit(args[0])}).div(${this.visit(args[1])})`;
+                case "twap":
+                    // twap = sum(prices)/count --> for single price  contribution
+                    if (args.length !== 1) {
+                        throw new Error("twap requires 1 argument (count)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).div(${this.visit(args[0])})`;
+                case "zscore":
+                    // zscore = (value-mean)/stddev
+                    // note for me:.. the formulas might look same in the decimal.js.. like minus then div.. but the args passed are changedd.. check..
+                    if (args.length !== 2) {
+                        throw new Error("zscore requires 2 arguments (mean, std_dev)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).minus(${this.visit(args[0])}).div(${this.visit(args[1])})`;
+                case "rsi":
+                    // rsi = 100-(100/(1+(avg_gain/avg_loss))) idk where is this gonna be used but on the innternet they say this is an impo form.. :/
+                    if (args.length !== 1) {
+                        throw new Error("rsi requires 1 argument (avg_loss)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(100).minus(new __Decimal_of_epoxy_lang_dont_use_this_name(100).div(new __Decimal_of_epoxy_lang_dont_use_this_name(1).plus(new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).div(${this.visit(args[0])}))))`;
+                case "kelly":
+                    // kelly = (win_prob* win_amount- loss_prob * loss_amount) / win_amount
+                    if (args.length !== 2) {
+                        throw new Error("kelly requires 2 arguments (win_prob, odds)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${this.visit(args[0])}).mul(${this.visit(args[1])}).minus(new __Decimal_of_epoxy_lang_dont_use_this_name(1).minus(${this.visit(args[0])})).div(${this.visit(args[1])})`;
+                case "slippage":
+                    // slippage = (execution_price - expected_price)/expected_price*10000 ...in bps
+                    if (args.length !== 1) {
+                        throw new Error("slippage requires 1 argument (expected_price)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).minus(${this.visit(args[0])}).div(${this.visit(args[0])}).mul(10000)`;
+                case "impshort":
+                    // implementation shortfall = (execution_price-arrival_price)*shares
+                    if (args.length !== 2) {
+                        throw new Error("impshort requires 2 arguments (arrival_price, shares)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).minus(${this.visit(args[0])}).mul(${this.visit(args[1])})`;
+                case "beta":
+                    // beta = covariance/market_variance
+                    if (args.length !== 2) {
+                        throw new Error("beta requires 2 arguments (covariance, market_variance)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${this.visit(args[0])}).div(${this.visit(args[1])})`;
+                case "maxdd":
+                    // max drawdown = (trough-peak)/peak * 100
+                    if (args.length !== 1) {
+                        throw new Error("maxdd requires 1 argument (peak)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).minus(${this.visit(args[0])}).div(${this.visit(args[0])}).mul(100)`;
+                case "sortino":
+                    // sortino = (returns-target)/ downsidedeviation
+                    if (args.length !== 2) {
+                        throw new Error("sortino requires 2 arguments (target_return, downside_dev)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).minus(${this.visit(args[0])}).div(${this.visit(args[1])})`;
+                case "calmar":
+                    // calmar= annualisedd_return/ max_drawdownn
+                    if (args.length !== 1) {
+                        throw new Error("calmar requires 1 argument (max_drawdown)");
+                    }
+                    // console.log("calmar: " + target + "/" + args[0]); 
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).div(${this.visit(args[0])})`;
+                case "omega":
+                    // omega = probabilityweightedgains/probabilityweightedlosses // these are for you to understand the formulas rather than fucking aroud..
+                    if (args.length !== 1) {
+                        throw new Error("omega requires 1 argument (losses)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).div(${this.visit(args[0])})`;
+                case "normpdf":
+                    //tbh i hate this probability thing bruhhh.. 1 / sqrt(2*pi) * e^(-x^2 / 2)
+                    return `normpdf_of_epoxy_lang_dont_use_this_name(${target})`;
+                case "ema":
+                    //ema = val*alpha + prev_ema*(1-alpha)
+                    if (args.length !== 2) {
+                        throw new Error("ema requires 2 arguments (previous_ema, alpha)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).times(${this.visit(args[1])}).plus(new __Decimal_of_epoxy_lang_dont_use_this_name(${this.visit(args[0])}).times(new __Decimal_of_epoxy_lang_dont_use_this_name(1).minus(${this.visit(args[1])})))`;
                 default:
                     throw new Error(`Unknown quant method: ${methodName}`);
             }
