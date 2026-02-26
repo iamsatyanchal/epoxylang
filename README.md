@@ -1,3 +1,9 @@
+# 🚧 Notice: 
+The official docs has not been updated yet and this version has not been published to NPM.
+It is currently in the testing phase and updates has been pushed to this repository for manual verification.
+Once the documentation is finalized, a new version will be officially released on NPM.. Stay tuned :)
+
+---
 <p align="center">
   <img src="https://epoxylang.vercel.app/epx_prop.png" alt="Epoxy Language Logo" width="200"/>
 </p>
@@ -81,4 +87,5 @@ Please keep changes consistent with Epoxy’s design philosophy: **clarity first
 
 <p align="center">
   Built with curiosity and intent by <a href="https://github.com/iamsatyanchal">@iamsatyanchal</a>
+
 </p>
