@@ -626,6 +626,12 @@ class JSCodeGenerator {
                         throw new Error("tofixed requires 1 argument (decimalPlaces)");
                     }
                     return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).toFixed(${this.visit(args[0])})`;
+                case "sin":
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).sin()`;
+                case "cos":
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).cos()`;
+                case "tan":
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).tan()`;
                 case "normpdf":
                     //tbh i hate this probability thing bruhhh.. 1 / sqrt(2*pi) * e^(-x^2 / 2)
                     return `normpdf_of_epoxy_lang_dont_use_this_name(${target})`
@@ -704,7 +710,6 @@ class JSCodeGenerator {
                 //         throw new Error("margin requires 1 argument (leverage)");
                 //     }
                 //     return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).div(${this.visit(args[0])})`;
-
                 // idk man but im kinda confused in this formula.. wtf im so dumb bruhhh.. :/
                 case "drawdown":
                     if (args.length !== 1) {
@@ -800,6 +805,18 @@ class JSCodeGenerator {
                         throw new Error("ema requires 2 arguments (previous_ema, alpha)");
                     }
                     return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).times(${this.visit(args[1])}).plus(new __Decimal_of_epoxy_lang_dont_use_this_name(${this.visit(args[0])}).times(new __Decimal_of_epoxy_lang_dont_use_this_name(1).minus(${this.visit(args[1])})))`;
+                case "parkinsonvol":
+                    // parkinsonvoll = sqrt((1/(4*ln(2))) *(ln(high/low))^2)
+                    if (args.length !== 1) {
+                        throw new Error("parkinsonvol requires 1 argument (low price)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).div(${this.visit(args[0])}).ln().pow(2).div(new __Decimal_of_epoxy_lang_dont_use_this_name(4).times(new __Decimal_of_epoxy_lang_dont_use_this_name(2).ln())).sqrt()`;
+                case "oir":
+                    // oir = bivol-askvol)/(bidvol+askvol)
+                    if (args.length !== 1) {
+                        throw new Error("oir requires 1 argument (ask volume)");
+                    }
+                    return `new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).minus(${this.visit(args[0])}).div(new __Decimal_of_epoxy_lang_dont_use_this_name(${target}).plus(${this.visit(args[0])}))`;
                 default:
                     throw new Error(`Unknown quant method: ${methodName}`);
             }
